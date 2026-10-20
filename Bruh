@@ -11,7 +11,7 @@ task.spawn(function()
         StarterGui:SetCore("SendNotification", {
             Title = "تم تعديله من قبل علاوي",
             Text = "تم تفعيل سكربت",
-            Icon = "rbxassetid://8732036547",
+            Icon = "rbxassetid://7938753161",
             Duration = 4
         })
     end)
@@ -40,6 +40,39 @@ local function notify(title, msg)
             Button1 = "Ok"
         })
     end)
+end
+const Players = cloneref(game:GetService("Players"))
+const RunService = cloneref(game:GetService("RunService"))
+const LocalPlayer = Players.LocalPlayer
+
+local Target: Player? = nil
+local SpawnPos: Vector3 = Vector3.new(0, 100, 0)
+
+@native const function Child<T>(Parent: Instance?, Name: string): T?
+    return (if Parent then Parent:FindFirstChild(Name) else nil) :: T?
+end
+
+const function Root(M: Model?): BasePart?
+    return Child<<BasePart>>(M, "HumanoidRootPart")
+end
+
+const function Hum(M: Model?): Humanoid?
+    return Child<<Humanoid>>(M, "Humanoid")
+end
+
+const function GetTarget(Input: string): Player?
+    const query = Input:lower()
+    if #query == 0 then return nil end
+    
+    for _, plr in Players:GetPlayers() do
+        if plr == LocalPlayer then continue end
+        
+        const Name, Dispname = plr.Name:lower(), (plr.DisplayName or plr.Name):lower()
+        if Name == query or Dispname == query or Name:sub(1, #query) == query or Dispname:sub(1, #query) == query then
+            return plr
+        end
+    end
+    return nil
 end
 --=====================================================================
 -- Services
