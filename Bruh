@@ -11,7 +11,7 @@ task.spawn(function()
         StarterGui:SetCore("SendNotification", {
             Title = "تم تعديله من قبل علاوي",
             Text = "تم تفعيل سكربت",
-            Icon = "rbxassetid://7938753161",
+            Icon = "rbxassetid://6652808984",
             Duration = 4
         })
     end)
