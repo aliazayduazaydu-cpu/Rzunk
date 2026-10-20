@@ -19,7 +19,7 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Parent                 = ScreenGui
 MainFrame.Size                   = UDim2.new(0, 160, 0, 110)
 MainFrame.Position               = UDim2.new(0.5, -80, 0.5, -55)
-MainFrame.BackgroundColor3       = Color3.fromRGB(50, 50, 50)
+MainFrame.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
 MainFrame.BorderSizePixel        = 0
 MainFrame.Active                 = true
 MainFrame.Draggable              = true
@@ -38,7 +38,7 @@ local ToggleButton = Instance.new("TextButton")
 ToggleButton.Parent             = MainFrame
 ToggleButton.Size               = UDim2.new(0, 160, 0, 20)
 ToggleButton.Position           = UDim2.new(0, 0, 0, 0)
-ToggleButton.Text               = "▼"
+ToggleButton.Text               = "فتح"
 ToggleButton.BackgroundColor3   = Color3.fromRGB(80, 80, 80)
 ToggleButton.TextColor3         = Color3.fromRGB(255, 255, 255)
 
@@ -53,7 +53,7 @@ local SizeBox = Instance.new("TextBox")
 SizeBox.Parent           = MainFrame
 SizeBox.Size             = UDim2.new(0, 140, 0, 25)
 SizeBox.Position         = UDim2.new(0, 10, 0, 25)
-SizeBox.Text             = "10"
+SizeBox.Text             = "15"
 SizeBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 SizeBox.TextColor3       = Color3.fromRGB(255, 255, 255)
 
@@ -68,7 +68,7 @@ local EnableButton = Instance.new("TextButton")
 EnableButton.Parent           = MainFrame
 EnableButton.Size             = UDim2.new(0, 140, 0, 25)
 EnableButton.Position         = UDim2.new(0, 10, 0, 55)
-EnableButton.Text             = "Enable Hitbox"
+EnableButton.Text             = "فعله"
 EnableButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
 EnableButton.TextColor3       = Color3.fromRGB(255, 255, 255)
 
@@ -117,13 +117,13 @@ EnableButton.MouseButton1Click:Connect(function()
     _G.Disabled   = not _G.Disabled
     EnableButton.Text = _G.Disabled and "Enable Hitbox" or "Disable Hitbox"
 
-    -- إعادة الشكل الطبيعي عند التعطيل
+    -- إرجاع الشكل الطبيعي عند التعطيل (بدون مربع ظاهر)
     if _G.Disabled then
         for _, plr in ipairs(playerList) do
             if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local root = plr.Character.HumanoidRootPart
-                root.Size         = Vector3.new(2, 2, 1)
-                root.Transparency = 0
+                root.Size         = Vector3.new(2, 2, 1)      -- الحجم الطبيعي
+                root.Transparency = 1                         -- ✅ شفاف (مخفي) بدل 0
                 root.BrickColor   = BrickColor.new("Medium stone grey")
                 root.Material     = Enum.Material.Plastic
                 root.CanCollide   = true
@@ -146,7 +146,7 @@ ToggleButton.MouseButton1Click:Connect(function()
     local tween     = TweenService:Create(MainFrame, tweenInfo, {Size = targetSize})
     tween:Play()
 
-    ToggleButton.Text = isCollapsed and "▲" or "▼"
+    ToggleButton.Text = isCollapsed and "فتح" or "اغلاق"
 end)
 
 --=====================================================================
@@ -158,9 +158,9 @@ RunService.RenderStepped:Connect(function()
             if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local root = plr.Character.HumanoidRootPart
                 root.Size         = Vector3.new(_G.HeadSize, _G.HeadSize, _G.HeadSize)
-                root.Transparency = 0.7
-                root.BrickColor   = BrickColor.new("Really blue")
-                root.Material     = Enum.Material.Neon
+                root.Transparency = 0.9                            -- تحكم بالشفافية
+                root.BrickColor   = BrickColor.new("Really black") -- ✅ أسود
+                root.Material     = Enum.Material.SmoothPlastic    -- ✅ يبرز الأسود
                 root.CanCollide   = false
             end
         end
