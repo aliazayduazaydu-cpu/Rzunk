@@ -1,0 +1,481 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+-- ظ…ظ†ط¹ طھظƒط±ط§ط± ط§ظ„ظˆط§ط¬ظ‡ط© ط¥ط°ط§ طھظ… طھط´ط؛ظٹظ„ ط§ظ„ط³ظƒط±ط¨طھ ط£ظƒط«ط± ظ…ظ† ظ…ط±ط©
+if playerGui:FindFirstChild("RedCustomUI") then
+    playerGui.RedCustomUI:Destroy()
+end
+
+-- ظ…طھط؛ظٹط±ط§طھ ظ„ط­ظپط¸ ط­ط§ظ„ط© ط§ظ„طھط´ط؛ظٹظ„ ظˆط§ظ„ط§ط³ظ… ط§ظ„ظ…ط³طھظ‡ط¯ظپ ط­طھظ‰ ط¨ط¹ط¯ ط§ظ„ظ…ظˆطھ
+getgenv().savedTargetName = ""
+getgenv().activeMode = nil 
+getgenv().activeConnection = nil
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RedCustomUI"
+screenGui.ResetOnSpawn = false -- ظ„ظƒظٹ ظ„ط§ طھط®طھظپظٹ ط§ظ„ظˆط§ط¬ظ‡ط© ط¹ظ†ط¯ ط§ظ„ظ…ظˆطھ
+screenGui.Parent = playerGui
+
+-- ط§ظ„ط¥ط·ط§ط± ط§ظ„ط±ط¦ظٹط³ظٹ (ط­ظˆط§ظپ ط­ظ…ط±ط§ط، ط¯ظ…ظˆظٹط© ظ†ط§ط¹ظ…ط©)
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 260, 0, 320)
+mainFrame.Position = UDim2.new(0.5, -130, 0.5, -160)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 10)
+mainCorner.Parent = mainFrame
+
+-- [ط®ظ„ظپظٹط© ط§ظ„ظˆط§ط¬ظ‡ط© ظƒطµظˆط±ط©] - ط¶ط¹ ط¢ظٹط¯ظٹ طµظˆط±طھظƒ ط¨ط¯ظ„ط§ظ‹ ظ…ظ† ط§ظ„ط£ط±ظ‚ط§ظ…
+local bgImage = Instance.new("ImageLabel")
+bgImage.Size = UDim2.new(1, 0, 1, 0)
+bgImage.BackgroundTransparency = 1
+bgImage.Image = "rbxassetid://1234567890" -- <--- ط¶ط¹ ط¢ظٹط¯ظٹ ط§ظ„طµظˆط±ط© ظ‡ظ†ط§
+bgImage.ImageTransparency = 0.3
+bgImage.ScaleType = Enum.ScaleType.Slice
+bgImage.Parent = mainFrame
+
+-- طھط£ط«ظٹط± ظ„ظ…ط¹ط§ظ† ط§ظ„ط­ظˆط§ظپ ظ„ظ„ط¥ط·ط§ط± ط§ظ„ط±ط¦ظٹط³ظٹ
+local frameStroke = Instance.new("UIStroke")
+frameStroke.Parent = mainFrame
+frameStroke.Thickness = 2
+frameStroke.Transparency = 0.2
+
+-- ط¹ظ†ظˆط§ظ† ط§ظ„ظˆط§ط¬ظ‡ط© ظ…ط¹ ط´ط¹ط§ط± خ©
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(0.9, 0, 0, 38)
+titleLabel.Position = UDim2.new(0.05, 0, 0, 10)
+titleLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 5)
+titleLabel.TextColor3 = Color3.fromRGB(0, 0, 0) 
+titleLabel.TextSize = 16
+titleLabel.Font = Enum.Font.Creepster
+titleLabel.Text = " خ© BANG~Cc"
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 8)
+titleCorner.Parent = titleLabel
+
+local titleStroke = Instance.new("UIStroke")
+titleStroke.Parent = titleLabel
+titleStroke.Thickness = 1.5
+titleStroke.Color = Color3.fromRGB(120, 0, 0)
+
+-- ط£ظٹظ‚ظˆظ†ط© ط§ظ„ط³ظ„ط§ط­
+local weaponIcon = Instance.new("ImageLabel")
+weaponIcon.Size = UDim2.new(0, 24, 0, 24)
+weaponIcon.Position = UDim2.new(1, -55, 0.5, -12)
+weaponIcon.BackgroundTransparency = 1
+weaponIcon.Image = "rbxassetid://6023426915" 
+weaponIcon.ImageColor3 = Color3.fromRGB(200, 40, 40)
+weaponIcon.Parent = titleLabel
+
+-- ط²ط± ط§ظ„طھطµط؛ظٹط±/ط§ظ„طھظƒط¨ظٹط± (-)
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 24, 0, 24)
+minimizeButton.Position = UDim2.new(1, -26, 0.5, -12)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeButton.TextSize = 14
+minimizeButton.Font = Enum.Font.SourceSansBold
+minimizeButton.Text = "-"
+minimizeButton.Parent = titleLabel
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 6)
+minCorner.Parent = minimizeButton
+
+-- ط²ط± ظپطھط­ ط§ظ„ظˆط§ط¬ظ‡ط© (ط§ظ„ط£ظٹظ‚ظˆظ†ط©) ظ‚ط§ط¨ظ„ط© ظ„ظ„ط³ط­ط¨ ظˆظ„ظ‡ط§ ط­ظˆط§ظپ ط®ط§ط±ط¬ظٹط© ط­ظ…ط±ط§ط، ط¯ظ…ظˆظٹط©
+local openButton = Instance.new("TextButton")
+openButton.Size = UDim2.new(0, 45, 0, 45)
+openButton.Position = UDim2.new(0, 15, 0.5, -22)
+openButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+openButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- ط´ط¹ط§ط± خ© ط£ط³ظˆط¯
+openButton.TextSize = 24
+openButton.Font = Enum.Font.SourceSansBold
+openButton.Text = "خ©"
+openButton.Visible = false
+openButton.Active = true
+openButton.Draggable = true
+openButton.Parent = screenGui
+
+local openCorner = Instance.new("UICorner")
+openCorner.CornerRadius = UDim.new(0, 12)
+openCorner.Parent = openButton
+
+local openStroke = Instance.new("UIStroke")
+openStroke.Parent = openButton
+openStroke.Thickness = 2.5
+openStroke.Color = Color3.fromRGB(200, 0, 0)
+
+-- ظ†ط§ظپط°ط© ظ‚ط§ط¦ظ…ط© ط§ظ„ظ„ط§ط¹ط¨ظٹظ† ط§ظ„ط¬ط§ظ†ط¨ظٹط©
+local listFrame = Instance.new("Frame")
+listFrame.Size = UDim2.new(0, 180, 0, 320)
+listFrame.Position = UDim2.new(1, 10, 0, 0)
+listFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+listFrame.BorderSizePixel = 0
+listFrame.Visible = false
+listFrame.Parent = mainFrame
+
+local listCorner = Instance.new("UICorner")
+listCorner.CornerRadius = UDim.new(0, 10)
+listCorner.Parent = listFrame
+
+local listBgImage = Instance.new("ImageLabel")
+listBgImage.Size = UDim2.new(1, 0, 1, 0)
+listBgImage.BackgroundTransparency = 1
+listBgImage.Image = "rbxassetid://1234567890"
+listBgImage.ImageTransparency = 0.3
+listBgImage.Parent = listFrame
+
+local listFrameStroke = Instance.new("UIStroke")
+listFrameStroke.Parent = listFrame
+listFrameStroke.Thickness = 1.5
+listFrameStroke.Color = Color3.fromRGB(120, 0, 0)
+
+local listTitle = Instance.new("TextLabel")
+listTitle.Size = UDim2.new(1, 0, 0, 35)
+listTitle.BackgroundColor3 = Color3.fromRGB(0, 40, 10)
+listTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+listTitle.TextSize = 13
+listTitle.Font = Enum.Font.Creepster
+listTitle.Text = "ظ‚ط§ط¦ظ…ط© ط§ظ„ظ„ط§ط¹ط¨ظٹظ† ط¨ط§ظ„ط³ظٹط±ظپط±"
+listTitle.Parent = listFrame
+
+local listTitleCorner = Instance.new("UICorner")
+listTitleCorner.CornerRadius = UDim.new(0, 8)
+listTitleCorner.Parent = listTitle
+
+local scrollingList = Instance.new("ScrollingFrame")
+scrollingList.Size = UDim2.new(1, -10, 1, -45)
+scrollingList.Position = UDim2.new(0, 5, 0, 40)
+scrollingList.BackgroundTransparency = 1
+scrollingList.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollingList.ScrollBarThickness = 4
+scrollingList.Parent = listFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = scrollingList
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+
+-- ط®ط§ظ†ط© ظƒطھط§ط¨ط© ط§ط³ظ… ط§ظ„ظ„ط§ط¹ط¨
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(0.65, 0, 0, 32)
+textBox.Position = UDim2.new(0.05, 0, 0, 58)
+textBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+textBox.BorderSizePixel = 0
+textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+textBox.PlaceholderText = "ط§ظƒطھط¨ ط§ط³ظ… ط§ظ„ظ„ط§ط¹ط¨ ظ‡ظ†ط§..."
+textBox.Text = ""
+textBox.TextSize = 13
+textBox.Font = Enum.Font.SourceSans
+textBox.Parent = mainFrame
+
+local boxCorner = Instance.new("UICorner")
+boxCorner.CornerRadius = UDim.new(0, 6)
+boxCorner.Parent = textBox
+
+local boxStroke = Instance.new("UIStroke")
+boxStroke.Parent = textBox
+boxStroke.Thickness = 1.2
+boxStroke.Color = Color3.fromRGB(150, 0, 0)
+
+-- ط²ط± ط§ط®طھظٹط§ط± ظ„ط§ط¹ط¨ظٹظ† ظ…ظ† ط§ظ„ط³ظٹط±ظپط±
+local playerListToggle = Instance.new("TextButton")
+playerListToggle.Size = UDim2.new(0.22, 0, 0, 32)
+playerListToggle.Position = UDim2.new(0.73, 0, 0, 58)
+playerListToggle.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+playerListToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+playerListToggle.TextSize = 11
+playerListToggle.Font = Enum.Font.SourceSansBold
+playerListToggle.Text = "ط§ظ„ظ„ط§ط¹ط¨ظٹظ†"
+playerListToggle.Parent = mainFrame
+
+local pListCorner = Instance.new("UICorner")
+pListCorner.CornerRadius = UDim.new(0, 6)
+pListCorner.Parent = playerListToggle
+
+local playerListToggleStroke = Instance.new("UIStroke")
+playerListToggleStroke.Parent = playerListToggle
+playerListToggleStroke.Thickness = 1.2
+
+-- ط®ط§ظ†ط© ط³ط±ط¹ط© ط§ظ„ط­ط±ظƒط©
+local speedBox = Instance.new("TextBox")
+speedBox.Size = UDim2.new(0.9, 0, 0, 32)
+speedBox.Position = UDim2.new(0.05, 0, 0, 100)
+speedBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+speedBox.BorderSizePixel = 0
+speedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedBox.PlaceholderText = "ط£ظƒطھط¨ ط±ظ‚ظ… ط³ط±ط¹ط© ط§ظ„ط¨ط§ظ†ط¬"
+speedBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+speedBox.Text = ""
+speedBox.TextSize = 14
+speedBox.Font = Enum.Font.SourceSans
+speedBox.Parent = mainFrame
+
+local speedCorner = Instance.new("UICorner")
+speedCorner.CornerRadius = UDim.new(0, 6)
+speedCorner.Parent = speedBox
+
+local speedStroke = Instance.new("UIStroke")
+speedStroke.Parent = speedBox
+speedStroke.Thickness = 1.2
+speedStroke.Color = Color3.fromRGB(150, 0, 0)
+
+-- ط²ط± ط§ظ„ظˆط¶ط¹ظٹط© ط§ظ„ط®ظ„ظپظٹط©
+local backButton = Instance.new("TextButton")
+backButton.Size = UDim2.new(0.9, 0, 0, 38)
+backButton.Position = UDim2.new(0.05, 0, 0, 142)
+backButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+backButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+backButton.TextSize = 14
+backButton.Font = Enum.Font.SourceSansBold
+backButton.Text = "BANG~V2ط®ظ„ظپظٹ"
+backButton.Parent = mainFrame
+
+local backCorner = Instance.new("UICorner")
+backCorner.CornerRadius = UDim.new(0, 6)
+backCorner.Parent = backButton
+
+local backStroke = Instance.new("UIStroke")
+backStroke.Parent = backButton
+backStroke.Thickness = 1.5
+backStroke.Color = Color3.fromRGB(120, 0, 0)
+
+-- ط²ط± ط§ظ„ظˆط¶ط¹ظٹط© ط§ظ„ط£ظ…ط§ظ…ظٹط©
+local frontButton = Instance.new("TextButton")
+frontButton.Size = UDim2.new(0.9, 0, 0, 38)
+frontButton.Position = UDim2.new(0.05, 0, 0, 188)
+frontButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frontButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+frontButton.TextSize = 14
+frontButton.Font = Enum.Font.SourceSansBold
+frontButton.Text = "BANG~v2(ظˆط¬ظ‡)"
+frontButton.Parent = mainFrame
+
+local frontCorner = Instance.new("UICorner")
+frontCorner.CornerRadius = UDim.new(0, 6)
+frontCorner.Parent = frontButton
+
+local frontStroke = Instance.new("UIStroke")
+frontStroke.Parent = frontButton
+frontStroke.Thickness = 1.5
+frontStroke.Color = Color3.fromRGB(120, 0, 0)
+
+-- ط²ط± ط¥ظٹظ‚ط§ظپ ط§ظ„ط­ط±ظƒط©
+local stopButton = Instance.new("TextButton")
+stopButton.Size = UDim2.new(0.42, 0, 0, 32)
+stopButton.Position = UDim2.new(0.05, 0, 0, 235)
+stopButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+stopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+stopButton.TextSize = 13
+stopButton.Font = Enum.Font.SourceSansBold
+stopButton.Text = "ط¥ظٹظ‚ط§ظپ"
+stopButton.Parent = mainFrame
+
+local stopCorner = Instance.new("UICorner")
+stopCorner.CornerRadius = UDim.new(0, 6)
+stopCorner.Parent = stopButton
+
+local stopStroke = Instance.new("UIStroke")
+stopStroke.Parent = stopButton
+stopStroke.Thickness = 1.5
+stopStroke.Color = Color3.fromRGB(120, 0, 0)
+
+-- ط²ط± ط¥ط؛ظ„ط§ظ‚ ط§ظ„ظˆط§ط¬ظ‡ط© ظ†ظ‡ط§ط¦ظٹط§ظ‹
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0.42, 0, 0, 32)
+closeButton.Position = UDim2.new(0.53, 0, 0, 235)
+closeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.TextSize = 13
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.Text = "ط¥ط؛ظ„ط§ظ‚ ط§ظ„ظˆط§ط¬ظ‡ط©"
+closeButton.Parent = mainFrame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = closeButton
+
+local closeStroke = Instance.new("UIStroke")
+closeStroke.Parent = closeButton
+closeStroke.Thickness = 1.5
+closeStroke.Color = Color3.fromRGB(120, 0, 0)
+
+-- ظ‚ط³ظ… ط§ظ„ط­ظ‚ظˆظ‚ (ظ…ط¹ طھط£ط«ظٹط± ط­ط±ظƒط© ط§ظ„ظ…ظˆط¬ط© ط¨ط§ظ„طھظ„ظˆظٹظ† ط¨ظٹظ† ط§ظ„ط£ط³ظˆط¯ ظˆط§ظ„ط£ط­ظ…ط± ط§ظ„ط¯ظ…ظˆظٹ)
+local creditsLabel = Instance.new("TextLabel")
+creditsLabel.Size = UDim2.new(1, 0, 0, 20)
+creditsLabel.Position = UDim2.new(0, 0, 0, 285)
+creditsLabel.BackgroundTransparency = 1
+creditsLabel.TextColor3 = Color3.fromRGB(200, 40, 40)
+creditsLabel.TextSize = 15
+creditsLabel.Font = Enum.Font.Creepster
+creditsLabel.Text = "Created by: BANG~Clarck"
+creditsLabel.Parent = mainFrame
+
+-- ط­ظ„ظ‚ط© ظ„طھظ†ظپظٹط° طھط£ط«ظٹط± ط§ظ„ظ…ظˆط¬ط© ط¹ظ„ظ‰ ط£ظ„ظˆط§ظ† ط§ظ„ط­ظ‚ظˆظ‚
+task.spawn(function()
+    while screenGui and screenGui.Parent do
+        local t = tick()
+        -- ط§ط³طھط®ط¯ط§ظ… ط¯ط§ظ„ط© ط§ظ„ط¬ظٹط¨ ظ„طھظˆظ„ظٹط¯ ط­ط±ظƒط© ظ…ظˆط¬ظٹط© ط³ظ„ط³ط© ظ„ظ„ظˆظ† ط§ظ„ظ†طµ ط¨ظٹظ† ط§ظ„ط£ط³ظˆط¯ ط§ظ„ط؛ط§ظ…ظ‚ ظˆط§ظ„ط£ط­ظ…ط±
+        local waveFactor = (math.sin(t * 3) + 1) / 2 -- طھطھط±ط§ظˆط­ ط§ظ„ظ‚ظٹظ…ط© ط¨ظٹظ† 0 ظˆ 1
+        creditsLabel.TextColor3 = Color3.fromRGB(200 * waveFactor, 20 * waveFactor, 20 * waveFactor)
+        task.wait(0.03)
+    end
+end)
+
+-- ط¯ط§ظ„ط© ظ„طھط­ط¯ظٹط« ظ‚ط§ط¦ظ…ط© ط§ظ„ظ„ط§ط¹ط¨ظٹظ† طھظ„ظ‚ط§ط¦ظٹط§ظ‹
+local function updatePlayerList()
+    for _, child in ipairs(scrollingList:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+    
+    local levelCount = 0
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= localPlayer then
+            levelCount = levelCount + 1
+            local pBtn = Instance.new("TextButton")
+            pBtn.Size = UDim2.new(1, 0, 0, 30)
+            pBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            pBtn.BorderSizePixel = 0
+            pBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            pBtn.TextSize = 13
+            pBtn.Font = Enum.Font.SourceSans
+            pBtn.Text = p.Name
+            pBtn.Parent = scrollingList
+            
+            local btnCorner = Instance.new("UICorner")
+            btnCorner.CornerRadius = UDim.new(0, 6)
+            btnCorner.Parent = pBtn
+            
+            local btnStroke = Instance.new("UIStroke")
+            btnStroke.Parent = pBtn
+            btnStroke.Thickness = 1
+            btnStroke.Color = Color3.fromRGB(120, 0, 0)
+            
+            pBtn.MouseButton1Click:Connect(function()
+                textBox.Text = p.Name
+                getgenv().savedTargetName = p.Name
+            end)
+        end
+    end
+    scrollingList.CanvasSize = UDim2.new(0, 0, 0, levelCount * 35)
+end
+
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(updatePlayerList)
+updatePlayerList()
+
+playerListToggle.MouseButton1Click:Connect(function()
+    listFrame.Visible = not listFrame.Visible
+end)
+
+minimizeButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    listFrame.Visible = false
+    openButton.Visible = true
+end)
+
+openButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = true
+    openButton.Visible = false
+end)
+
+local function stopAction()
+    getgenv().activeMode = nil
+    if getgenv().activeConnection then
+        getgenv().activeConnection:Disconnect()
+        getgenv().activeConnection = nil
+    end
+    local character = localPlayer.Character
+    if character and character:FindFirstChildOfClass("Humanoid") then
+        character:FindFirstChildOfClass("Humanoid").PlatformStand = false
+    end
+end
+
+stopButton.MouseButton1Click:Connect(function()
+    stopAction()
+    getgenv().savedTargetName = ""
+    textBox.Text = ""
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    stopAction()
+    screenGui:Destroy()
+end)
+
+local function getTarget()
+    local searchName = string.lower(getgenv().savedTargetName or "")
+    if searchName == "" then return nil end
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= localPlayer then
+            local pName = string.lower(p.Name)
+            local pDisplay = string.lower(p.DisplayName or "")
+            if string.sub(pName, 1, string.len(searchName)) == searchName or string.sub(pDisplay, 1, string.len(searchName)) == searchName then
+                return p
+            end
+        end
+    end
+    return nil
+end
+
+local function startTracking()
+    if getgenv().activeConnection then
+        getgenv().activeConnection:Disconnect()
+    end
+    
+    getgenv().activeConnection = RunService.Stepped:Connect(function()
+        if not getgenv().activeMode then return end
+        
+        local character = localPlayer.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+        
+        local targetPlayer = getTarget()
+        if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            return 
+        end
+        
+        local targetChar = targetPlayer.Character
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then humanoid.PlatformStand = true end
+        
+        local myRoot = character.HumanoidRootPart
+        local targetRoot = targetChar.HumanoidRootPart
+        local speedVal = tonumber(speedBox.Text) or 10
+        
+        if getgenv().activeMode == "back" then
+            local offsetZ = 1.3 + math.sin(tick() * (speedVal * 0.7)) * 0.8
+            myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, offsetZ)
+        elseif getgenv().activeMode == "front" then
+            local offsetZ = -0.4 + math.sin(tick() * (speedVal * 0.7)) * 0.3
+            myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 2.1, offsetZ) * CFrame.Angles(0, math.rad(180), 0)
+        end
+    end)
+end
+
+backButton.MouseButton1Click:Connect(function()
+    getgenv().activeMode = "back"
+    startTracking()
+end)
+
+frontButton.MouseButton1Click:Connect(function()
+    getgenv().activeMode = "front"
+    startTracking()
+end)
+
+localPlayer.CharacterAdded:Connect(function(newCharacter)
+    task.wait(0.8)
+    if getgenv().activeMode and getgenv().savedTargetName ~= "" then
+        startTracking()
+    end
+end)
