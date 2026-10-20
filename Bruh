@@ -38,7 +38,7 @@ local ToggleButton = Instance.new("TextButton")
 ToggleButton.Parent             = MainFrame
 ToggleButton.Size               = UDim2.new(0, 160, 0, 20)
 ToggleButton.Position           = UDim2.new(0, 0, 0, 0)
-ToggleButton.Text               = "فتح"
+ToggleButton.Text               = "اغلاق"
 ToggleButton.BackgroundColor3   = Color3.fromRGB(80, 80, 80)
 ToggleButton.TextColor3         = Color3.fromRGB(255, 255, 255)
 
