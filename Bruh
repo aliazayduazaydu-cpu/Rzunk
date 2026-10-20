@@ -5,6 +5,7 @@ local Players      = game:GetService("Players")
 local RunService   = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer  = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
 
 --=====================================================================
 -- GUI - ScreenGui
@@ -77,6 +78,96 @@ EnableCorner.CornerRadius = UDim.new(0, 10)
 EnableCorner.Parent       = EnableButton
 
 --=====================================================================
+-- ADDITION: Floating Image Button + Sound
+--=====================================================================
+local OpenButton = Instance.new("ImageButton")
+OpenButton.Name = "FloatingOpenButton"
+OpenButton.Parent = ScreenGui
+OpenButton.Size = UDim2.new(0, 50, 0, 50)
+OpenButton.Position = UDim2.new(0, 20, 0.5, -25)
+OpenButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+OpenButton.BackgroundTransparency = 0.15
+OpenButton.BorderSizePixel = 0
+OpenButton.Image = "rbxassetid://8732036547"
+OpenButton.ScaleType = Enum.ScaleType.Fit
+OpenButton.Active = true
+OpenButton.ZIndex = 10
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 12)
+ButtonCorner.Parent = OpenButton
+
+local ButtonStroke = Instance.new("UIStroke")
+ButtonStroke.Color = Color3.fromRGB(255, 50, 50)
+ButtonStroke.Thickness = 1.5
+ButtonStroke.Parent = OpenButton
+
+local ButtonSound = Instance.new("Sound")
+ButtonSound.Name = "OpenCloseSound"
+ButtonSound.SoundId = "rbxassetid://6652808984"
+ButtonSound.Volume = 1
+ButtonSound.Parent = OpenButton
+
+--=====================================================================
+-- ADDITION: Drag Button (PC + Mobile)
+--=====================================================================
+local dragging = false
+local dragStart
+local startPosition
+local moved = false
+local activeInput
+
+OpenButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragging = true
+        moved = false
+        dragStart = input.Position
+        startPosition = OpenButton.Position
+        activeInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (
+        input == activeInput
+        or input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+        local delta = input.Position - dragStart
+
+        if math.abs(delta.X) > 5 or math.abs(delta.Y) > 5 then
+            moved = true
+        end
+
+        OpenButton.Position = UDim2.new(
+            startPosition.X.Scale,
+            startPosition.X.Offset + delta.X,
+            startPosition.Y.Scale,
+            startPosition.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input == activeInput then
+        dragging = false
+        activeInput = nil
+    end
+end)
+
+OpenButton.Activated:Connect(function()
+    if moved then
+        moved = false
+        return
+    end
+
+    MainFrame.Visible = not MainFrame.Visible
+    ButtonSound:Play()
+end)
+
+--=====================================================================
 -- State / Globals
 --=====================================================================
 _G.HeadSize   = tonumber(SizeBox.Text) or 10
@@ -117,13 +208,12 @@ EnableButton.MouseButton1Click:Connect(function()
     _G.Disabled   = not _G.Disabled
     EnableButton.Text = _G.Disabled and "Enable Hitbox" or "Disable Hitbox"
 
-    -- إرجاع الشكل الطبيعي عند التعطيل (بدون مربع ظاهر)
     if _G.Disabled then
         for _, plr in ipairs(playerList) do
             if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local root = plr.Character.HumanoidRootPart
-                root.Size         = Vector3.new(2, 2, 1)      -- الحجم الطبيعي
-                root.Transparency = 1                         -- ✅ شفاف (مخفي) بدل 0
+                root.Size         = Vector3.new(2, 2, 1)
+                root.Transparency = 1
                 root.BrickColor   = BrickColor.new("Medium stone grey")
                 root.Material     = Enum.Material.Plastic
                 root.CanCollide   = true
@@ -143,7 +233,7 @@ ToggleButton.MouseButton1Click:Connect(function()
         or  UDim2.new(0, 160, 0, 110)
 
     local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween     = TweenService:Create(MainFrame, tweenInfo, {Size = targetSize})
+    local tween = TweenService:Create(MainFrame, tweenInfo, {Size = targetSize})
     tween:Play()
 
     ToggleButton.Text = isCollapsed and "فتح" or "اغلاق"
@@ -158,9 +248,9 @@ RunService.RenderStepped:Connect(function()
             if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local root = plr.Character.HumanoidRootPart
                 root.Size         = Vector3.new(_G.HeadSize, _G.HeadSize, _G.HeadSize)
-                root.Transparency = 0.9                            -- تحكم بالشفافية
-                root.BrickColor   = BrickColor.new("Really black") -- ✅ أسود
-                root.Material     = Enum.Material.SmoothPlastic    -- ✅ يبرز الأسود
+                root.Transparency = 0.9
+                root.BrickColor   = BrickColor.new("Really black")
+                root.Material     = Enum.Material.SmoothPlastic
                 root.CanCollide   = false
             end
         end
