@@ -102,7 +102,7 @@ local Window = Rayfield:CreateWindow({
 })
 -- مكان اول
 
-local Tab = Window:CreateTab("قاىمه رائيسيه", 4483362458)
+local Tab = Window:CreateTab("قاىمه رائيسيه", 85431332358757)
 
 local Divider = Tab:CreateDivider()
 
@@ -119,4 +119,121 @@ Rayfield:Notify({
    Image = 4483362458,
 })
 
-local Tab = Window:CreateTab("قاىمه رائيسيه", 4483362458)
+--مكان ثاني
+local Tab = Window:CreateTab("لاعب", 4483362458)
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+
+local Toggle = Tab:CreateToggle({
+    Name = "بوست سرعه",
+    CurrentValue = false,
+    Flag = "Speed150",
+    Callback = function(Value)
+        local Character = Player.Character or Player.CharacterAdded:Wait()
+        local Humanoid = Character:WaitForChild("Humanoid")
+
+        if Value then
+            Humanoid.WalkSpeed = 150
+        else
+            Humanoid.WalkSpeed = 20
+        end
+    end,
+})
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+
+local Toggle = Tab:CreateToggle({
+    Name = "بوست قفز",
+    CurrentValue = false,
+    Flag = "Jump150",
+    Callback = function(Value)
+        local Character = Player.Character or Player.CharacterAdded:Wait()
+        local Humanoid = Character:WaitForChild("Humanoid")
+
+        Humanoid.UseJumpPower = true
+
+        if Value then
+            Humanoid.JumpPower = 210
+        else
+            Humanoid.JumpPower = 60
+        end
+    end,
+})
+
+--esp
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local ESPEnabled = false
+local ESPObjects = {}
+
+local function RemoveESP(Player)
+    if ESPObjects[Player] then
+        ESPObjects[Player]:Destroy()
+        ESPObjects[Player] = nil
+    end
+end
+
+local function AddESP(Player)
+    if Player == LocalPlayer then return end
+
+    local Character = Player.Character
+    if not Character then return end
+
+    RemoveESP(Player)
+
+    local Highlight = Instance.new("Highlight")
+    Highlight.Name = "PlayerESP"
+    Highlight.FillColor = Color3.fromRGB(255, 0, 0)
+    Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    Highlight.FillTransparency = 0.65
+    Highlight.Adornee = Character
+    Highlight.Parent = Character
+
+    ESPObjects[Player] = Highlight
+end
+
+local function RefreshESP()
+    for _, Player in ipairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer then
+            RemoveESP(Player)
+
+            if ESPEnabled then
+                AddESP(Player)
+            end
+        end
+    end
+end
+
+local Toggle = Tab:CreateToggle({
+    Name = "كشف لاعبين",
+    CurrentValue = false,
+    Flag = "PlayerESP",
+    Callback = function(Value)
+        ESPEnabled = Value
+        RefreshESP()
+    end,
+})
+
+local function SetupPlayer(Player)
+    Player.CharacterAdded:Connect(function()
+        task.wait(1)
+
+        if ESPEnabled then
+            AddESP(Player)
+        end
+    end)
+end
+
+for _, Player in ipairs(Players:GetPlayers()) do
+    SetupPlayer(Player)
+end
+
+Players.PlayerAdded:Connect(SetupPlayer)
+
+Players.PlayerRemoving:Connect(function(Player)
+    RemoveESP(Player)
+end)
