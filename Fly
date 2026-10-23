@@ -7,12 +7,12 @@ local Debris = game:GetService("Debris")
 -- ====== IDs ======
 local CLICK_SOUND = "rbxassetid://138567614125924"
 local IMG_FLY      = "rbxassetid://93470771949011"
-local IMG_UP       = "rbxassetid://15838502533"
-local IMG_DOWN     = "rbxassetid://13972932227"
-local IMG_SPD_UP   = "rbxassetid://120989569829971" -- زيادة السرعة
+local IMG_UP       = "rbxassetid://121276332228259"
+local IMG_DOWN     = "rbxassetid://8152628560"
+local IMG_SPD_UP   = "rbxassetid://102549819213747" -- زيادة السرعة
 local IMG_SPD_DOWN = "rbxassetid://11353065410"     -- تنقيص السرعة
 local IMG_MINI     = "rbxassetid://120989569829971" -- علامة - فوق
-local IMG_MINI2    = "rbxassetid://11353065410"     -- علامة + فوق
+local IMG_MINI2    = "rbxassetid://102549819213747"     -- علامة + فوق
 local IMG_CLOSE    = "rbxassetid://5079265036"      -- علامة X
 
 local main = Instance.new("ScreenGui")
