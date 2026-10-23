@@ -10,8 +10,8 @@ local IMG_FLY      = "rbxassetid://93470771949011"
 local IMG_UP       = "rbxassetid://9260379880"
 local IMG_DOWN     = "rbxassetid://8152628560"
 local IMG_SPD_UP   = "rbxassetid://15466516983" -- زيادة السرعة
-local IMG_SPD_DOWN = "rbxassetid://120989569829971"     -- تنقيص السرعة
-local IMG_MINI     = "rbxassetid://120989569829971" -- علامة - فوق
+local IMG_SPD_DOWN = "rbxassetid://90208633242157"     -- تنقيص السرعة
+local IMG_MINI     = "rbxassetid://90208633242157" -- علامة - فوق
 local IMG_MINI2    = "rbxassetid://15466516983"     -- علامة + فوق
 local IMG_CLOSE    = "rbxassetid://5079265036"      -- علامة X
 
