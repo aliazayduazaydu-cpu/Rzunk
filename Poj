@@ -111,3 +111,12 @@ local Section2 = Tab:CreateSection("سكربت عربي ب كامل")
 local Section3 = Tab:CreateSection("حسابي ب روبلوكس hdjjlawe")
 local Section4 = Tab:CreateSection("انت في تحديث v0.1")
 local Section5 = Tab:CreateSection("سكربت يتم تحديث كل اسبوع")
+--رساله تحت
+Rayfield:Notify({
+   Title = "شكرا لتشغيل سكربت",
+   Content = "Notification Content",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+
+local Tab = Window:CreateTab("قاىمه رائيسيه", 4483362458)
