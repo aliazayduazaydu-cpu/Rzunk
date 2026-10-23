@@ -243,9 +243,32 @@ end)
 
 --طيران
 
-local Button = Tab:CreateButton({
-   Name = "Button Example",
-   Callback = function()
-   -- The function that takes place when the button is pressed
-   end,
+
+Tab:CreateToggle({
+    Name = "تشغيل / حذف القائمة",
+    CurrentValue = false,
+    Flag = "FlyGUIToggle",
+
+    Callback = function(Value)
+        if Value then
+            local Success, ErrorMessage = pcall(function()
+                loadstring(game:HttpGet(
+                    "https://pastefy.app/Ee1N9yIy/raw"
+                ))()
+            end)
+
+            if not Success then
+                warn(ErrorMessage)
+            end
+        else
+            local PlayerGui = game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
+
+            if PlayerGui then
+                local GUI = PlayerGui:FindFirstChild("main")
+                if GUI then
+                    GUI:Destroy()
+                end
+            end
+        end
+    end,
 })
