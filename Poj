@@ -125,10 +125,13 @@ local Tab = Window:CreateTab("لاعب", 4483362458)
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+
 local Toggle = Tab:CreateToggle({
     Name = "بوست سرعه",
     CurrentValue = false,
-    Flag = "Speed150",
+    Flag = "WalkSpeed150",
     Callback = function(Value)
         local Character = Player.Character or Player.CharacterAdded:Wait()
         local Humanoid = Character:WaitForChild("Humanoid")
