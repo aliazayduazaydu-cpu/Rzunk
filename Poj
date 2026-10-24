@@ -274,3 +274,32 @@ Tab:CreateToggle({
         end
     end,
 })
+
+--ضرب عن بعد
+
+Tab:CreateToggle({
+    Name = "Hitbox",
+    CurrentValue = false,
+    Flag = "HitboxToggle",
+
+    Callback = function(Value)
+        if Value then
+            local Success, ErrorMessage = pcall(function()
+                loadstring(game:HttpGet(
+                    "https://raw.githubusercontent.com/aliazayduazaydu-cpu/Rzunk/refs/heads/main/Bruh"
+                ))()
+            end)
+
+            if not Success then
+                warn(ErrorMessage)
+            end
+        else
+            local CoreGui = game:GetService("CoreGui")
+            local GUI = CoreGui:FindFirstChild("HitboxGUI")
+
+            if GUI then
+                GUI:Destroy()
+            end
+        end
+    end,
+})
