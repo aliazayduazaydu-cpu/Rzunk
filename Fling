@@ -37,7 +37,7 @@ const function attach(Part: BasePart, TargetPart: BasePart?)
 end
 
 
-const Main = Win:CreateTab("Main", 0)
+local Main = Window:CreateTab("Main", 0)
 
 Main:CreateInput({
     Name = "Select Target",
