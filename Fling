@@ -36,7 +36,7 @@ const function attach(Part: BasePart, TargetPart: BasePart?)
     pcall(sethiddenproperty, Part, 'PhysicsRepRootRef', InstanceHandle.new(TargetPart or Part))
 end
 
-const Win = Rayfield:CreateWindow({Name = "Fling People and stuff hub", Theme = "Default"})
+
 const Main = Win:CreateTab("Main", 0)
 
 Main:CreateInput({
