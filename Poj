@@ -645,7 +645,7 @@ end
 
 Mvmentbtn("فنق طبيعي", Vector3.new(0, 0, 0), true)
 Mvmentbtn("فنق v2", Vector3.new(0, -2.5, 0), true)
-Mvmentbtn("طيره في سماؤ", Vector3.new(0, -2.8, 0), false)
+Mvmentbtn("طيره في سماء", Vector3.new(0, -2.8, 0), false)
 Mvmentbtn("طيره اكثر في سماء", Vector3.new(0, -3.1, 0), false)
 Mvmentbtn("خليه يصعد مثل مصعد", Vector3.new(0, -2.6, 0), false)
 Mvmentbtn("🤣لا تخليه يقفز 🤣", Vector3.new(0, 3.5, 0), false)
