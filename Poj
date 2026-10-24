@@ -1,3 +1,5 @@
+
+--اشعار تشغيل
 local StarterGui = game:GetService("StarterGui")
 local SoundService = game:GetService("SoundService")
 
@@ -245,7 +247,7 @@ end)
 
 
 Tab:CreateToggle({
-    Name = "تشغيل / حذف القائمة",
+    Name = "طيران",
     CurrentValue = false,
     Flag = "FlyGUIToggle",
 
