@@ -591,16 +591,16 @@ const function attach(Part: BasePart, TargetPart: BasePart?)
 end
 
 
-local Main = Window:CreateTab("Main", 0)
+local Main = Window:CreateTab("فنق", 15034673023)
 
 Main:CreateInput({
-    Name = "Select Target",
+    Name = "اكتب اسم لاعب",
     PlaceholderText = "Username / Display",
     Callback = function(T: string)
         Target = GetTarget(T)
         if Target then
             Rayfield:Notify({ 
-                Title = "Target Selected", 
+                Title = "تم تحديد لاعب", 
                 Content = `{Target.DisplayName} (@{Target.Name})`, 
                 Duration = 3 
             })
@@ -643,12 +643,12 @@ Main:CreateInput({
     end})
 end
 
-Mvmentbtn("Fling Player", Vector3.new(0, 0, 0), true)
-Mvmentbtn("Fling 2.0", Vector3.new(0, -2.5, 0), true)
-Mvmentbtn("Platform Fly", Vector3.new(0, -2.8, 0), false)
-Mvmentbtn("Magic Carpet", Vector3.new(0, -3.1, 0), false)
-Mvmentbtn("Elevator", Vector3.new(0, -2.6, 0), false)
-Mvmentbtn("Anti Jump", Vector3.new(0, 3.5, 0), false)
+Mvmentbtn("فنق طبيعي", Vector3.new(0, 0, 0), true)
+Mvmentbtn("فنق v2", Vector3.new(0, -2.5, 0), true)
+Mvmentbtn("طيره في سماؤ", Vector3.new(0, -2.8, 0), false)
+Mvmentbtn("طيره اكثر في سماء", Vector3.new(0, -3.1, 0), false)
+Mvmentbtn("خليه يصعد مثل مصعد", Vector3.new(0, -2.6, 0), false)
+Mvmentbtn("🤣لا تخليه يقفز 🤣", Vector3.new(0, 3.5, 0), false)
 
 @native const function Bind(Name: string, Offset: Vector3)
     local Conn: RBXScriptConnection?
@@ -677,11 +677,11 @@ Mvmentbtn("Anti Jump", Vector3.new(0, 3.5, 0), false)
     end})
 end
 
-Bind("Infinite Jump", Vector3.new(0, -5.75, 0))
-Bind("Speed Boost (slow)", Vector3.new(0, 0.7, 1))
-Bind("Speed Boost (medium)", Vector3.new(0, 0.7, 0.5))
-Bind("Speed Boost (fast)", Vector3.new(0, 0.7, 0.35))
-Bind("Movement Breaker", Vector3.new(0, 0.7, -0.8))
+Bind("ساعده في قفز", Vector3.new(0, -5.75, 0))
+Bind("زيد سرعه لاعب(بطيء)", Vector3.new(0, 0.7, 1))
+Bind("زيد سرعه لاعب (عاديه)", Vector3.new(0, 0.7, 0.5))
+Bind("زيد سرعه لاعب (سريع)", Vector3.new(0, 0.7, 0.35))
+Bind("🤣خليه يبكي🤣", Vector3.new(0, 0.7, -0.8))
 
 @native const function CreateRocket(Name: string, Speed: number)
     local Conn: RBXScriptConnection?
@@ -715,8 +715,8 @@ Bind("Movement Breaker", Vector3.new(0, 0.7, -0.8))
     end})
 end
 
-CreateRocket("Rocket Target", 50)
-CreateRocket("GODSPEED", 5000)
+CreateRocket("طيره", 50)
+CreateRocket("طيره بشكل مو طبيعي", 5000)
 
 local Flingin = false
 Main:CreateButton({Name = "NaN Fling", Callback = function()
@@ -755,11 +755,11 @@ Main:CreateButton({Name = "NaN Fling", Callback = function()
     end)
 end})
 
-const Other = Win:CreateTab("Other", 0)
+local Other = Window:CreateTab("اشياء اضافيه", 112997857105971)
 
 local anflc: RBXScriptConnection?
 Other:CreateToggle({
-    Name = "Anti Fling",
+    Name = "مضاد فنق",
     Callback = function(State: boolean)
         if anflc then anflc:Disconnect(); anflc = nil end
         if not State then return end
@@ -791,7 +791,7 @@ if LocalPlayer.Character then
 end
 
 local anti: RBXScriptConnection?
-Other:CreateToggle({Name = "Anti-Void", Callback = function(s: boolean)
+Other:CreateToggle({Name = "مضاد فويد", Callback = function(s: boolean)
     if anti then anti:Disconnect(); anti = nil end
     if not s then return end
     anti = RunService.Heartbeat:Connect(function()
