@@ -1,0 +1,685 @@
+-- 🛠 مولّد سكربت Touch Fire
+-- حدّد Part أو مجموعة، اضغط "تم"، يطلع لك كود جاهز للنسخ
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local GuiService = game:GetService("GuiService")
+local player = Players.LocalPlayer
+
+local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
+pcall(function()
+	local o = parentGui:FindFirstChild("TouchGenGui")
+	if o then o:Destroy() end
+end)
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "TouchGenGui"
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = parentGui
+
+-- ===== قالب الكود الذي سيتولد =====
+local TEMPLATE = [==[
+-- 🔥 Touch Fire Menu (مُولَّد تلقائيا)
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+
+local AUTO_DELAY = 0.5 -- ثواني بين كل دورة في وضع الاوتو
+
+local targets = {
+--TARGETS--
+}
+
+local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
+pcall(function()
+	local old = parentGui:FindFirstChild("TouchFireMenu")
+	if old then old:Destroy() end
+end)
+
+local busy = false
+local function fireAll()
+	if busy then return 0 end
+	local char = player.Character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	if not root or not firetouchinterest then return -1 end
+	busy = true
+	local n = 0
+	local function touch(p)
+		pcall(function()
+			firetouchinterest(root, p, 0)
+			firetouchinterest(root, p, 1)
+		end)
+		n += 1
+		if n % 30 == 0 then task.wait() end
+	end
+	for _, t in ipairs(targets) do
+		local ok, inst = pcall(t.get)
+		if ok and inst then
+			if inst:IsA("BasePart") then touch(inst) end
+			if t.group then
+				for _, d in ipairs(inst:GetDescendants()) do
+					if d:IsA("BasePart") then touch(d) end
+				end
+			end
+		end
+	end
+	busy = false
+	return n
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "TouchFireMenu"
+gui.ResetOnSpawn = false
+gui.Parent = parentGui
+
+local function corner(o, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r)
+	c.Parent = o
+end
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 210, 0, 120)
+frame.Position = UDim2.new(0.5, -105, 0, 50)
+frame.BackgroundColor3 = Color3.fromRGB(22, 22, 34)
+frame.Parent = gui
+corner(frame, 12)
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(120, 170, 255)
+stroke.Thickness = 2
+stroke.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -40, 0, 30)
+title.BackgroundTransparency = 1
+title.Text = "🔥 Touch Fire"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 15
+title.Parent = frame
+
+local function button(text, y, color)
+	local b = Instance.new("TextButton")
+	b.Position = UDim2.new(0, 10, 0, y)
+	b.Size = UDim2.new(1, -20, 0, 34)
+	b.BackgroundColor3 = color
+	b.Text = text
+	b.TextColor3 = Color3.new(1, 1, 1)
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 14
+	b.AutoButtonColor = true
+	b.Parent = frame
+	corner(b, 8)
+	return b
+end
+
+local close = Instance.new("TextButton")
+close.Position = UDim2.new(1, -32, 0, 3)
+close.Size = UDim2.new(0, 26, 0, 24)
+close.BackgroundColor3 = Color3.fromRGB(180, 50, 60)
+close.Text = "✖"
+close.TextColor3 = Color3.new(1, 1, 1)
+close.Font = Enum.Font.GothamBold
+close.TextSize = 13
+close.Parent = frame
+corner(close, 6)
+
+local fireBtn = button("⚡ تشغيل (Touch)", 36, Color3.fromRGB(50, 90, 200))
+local autoBtn = button("🔁 أوتو: مطفي", 76, Color3.fromRGB(180, 50, 60))
+
+local auto = false
+fireBtn.MouseButton1Click:Connect(function()
+	task.spawn(function()
+		local n = fireAll()
+		if n == -1 then
+			fireBtn.Text = "❌ المشغل لا يدعم أو لا توجد شخصية"
+		else
+			fireBtn.Text = "✔ تم لمس " .. n
+		end
+		task.wait(1)
+		fireBtn.Text = "⚡ تشغيل (Touch)"
+	end)
+end)
+
+autoBtn.MouseButton1Click:Connect(function()
+	auto = not auto
+	autoBtn.Text = auto and "🔁 أوتو: شغال" or "🔁 أوتو: مطفي"
+	TweenService:Create(autoBtn, TweenInfo.new(0.25), {
+		BackgroundColor3 = auto and Color3.fromRGB(40, 160, 80) or Color3.fromRGB(180, 50, 60)
+	}):Play()
+end)
+
+close.MouseButton1Click:Connect(function()
+	auto = false
+	gui:Destroy()
+end)
+
+task.spawn(function()
+	while gui.Parent do
+		if auto then
+			fireAll()
+			task.wait(AUTO_DELAY)
+		else
+			task.wait(0.15)
+		end
+	end
+end)
+
+-- سحب القائمة
+local dragging, dragStart, startPos
+title.Active = true
+title.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+		dragging, dragStart, startPos = true, i.Position, frame.Position
+		i.Changed:Connect(function()
+			if i.UserInputState == Enum.UserInputState.End then dragging = false end
+		end)
+	end
+end)
+UIS.InputChanged:Connect(function(i)
+	if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+		local d = i.Position - dragStart
+		frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+	end
+end)
+]==]
+
+-- ===== أدوات الواجهة =====
+local function corner(o, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r or 10)
+	c.Parent = o
+end
+
+local function stroke(o, col, t)
+	local s = Instance.new("UIStroke")
+	s.Color = col or Color3.new(1, 1, 1)
+	s.Thickness = t or 1.5
+	s.Transparency = 0.25
+	s.Parent = o
+	return s
+end
+
+local function tween(o, t, props, style, dir)
+	local tw = TweenService:Create(o, TweenInfo.new(t, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out), props)
+	tw:Play()
+	return tw
+end
+
+local function label(parent, text, size, color, font)
+	local l = Instance.new("TextLabel")
+	l.BackgroundTransparency = 1
+	l.Text = text
+	l.TextSize = size or 14
+	l.TextColor3 = color or Color3.new(1, 1, 1)
+	l.Font = font or Enum.Font.GothamMedium
+	l.Parent = parent
+	return l
+end
+
+local BLUE, GREEN, RED = Color3.fromRGB(50, 90, 200), Color3.fromRGB(40, 160, 80), Color3.fromRGB(180, 50, 60)
+
+local function makeButton(parent, text, order, color, size)
+	local b = Instance.new("TextButton")
+	b.Size = size or UDim2.new(1, 0, 0, 38)
+	b.LayoutOrder = order or 0
+	b.BackgroundColor3 = color or BLUE
+	b.Text = text
+	b.TextColor3 = Color3.new(1, 1, 1)
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 14
+	b.AutoButtonColor = false
+	b.Parent = parent
+	corner(b, 9)
+	local base, baseSize = b.BackgroundColor3, b.Size
+	b.MouseEnter:Connect(function() tween(b, 0.15, {BackgroundColor3 = base:Lerp(Color3.new(1, 1, 1), 0.2)}) end)
+	b.MouseLeave:Connect(function() tween(b, 0.15, {BackgroundColor3 = base}) end)
+	b.MouseButton1Down:Connect(function()
+		tween(b, 0.08, {Size = UDim2.new(baseSize.X.Scale, baseSize.X.Offset - 6, baseSize.Y.Scale, baseSize.Y.Offset - 4)})
+	end)
+	b.MouseButton1Up:Connect(function() tween(b, 0.15, {Size = baseSize}, Enum.EasingStyle.Back) end)
+	return b
+end
+
+local function makeToggle(parent, text, order, onChange)
+	local state = false
+	local b = makeButton(parent, "", order, RED)
+	local function render()
+		b.Text = text .. (state and ": شغال ✔" or ": مطفي ✖")
+		tween(b, 0.25, {BackgroundColor3 = state and GREEN or RED})
+	end
+	render()
+	b.MouseButton1Click:Connect(function()
+		state = not state
+		render()
+		onChange(state)
+	end)
+	return b
+end
+
+-- ===== النافذة =====
+local win = Instance.new("Frame")
+win.AnchorPoint = Vector2.new(0.5, 0)
+win.Position = UDim2.new(0.5, 0, 0, 8)
+win.Size = UDim2.new(0, 330, 0, 350)
+win.BackgroundColor3 = Color3.fromRGB(20, 20, 32)
+win.ClipsDescendants = true
+win.Parent = gui
+corner(win, 14)
+local winStroke = stroke(win, Color3.fromRGB(120, 170, 255), 2)
+
+local titleBar = label(win, "🛠 مولّد سكربت Touch Fire", 16, nil, Enum.Font.GothamBold)
+titleBar.Size = UDim2.new(1, -44, 0, 34)
+titleBar.Active = true
+
+local closeBtn = makeButton(win, "✖", 0, RED, UDim2.new(0, 28, 0, 24))
+closeBtn.Position = UDim2.new(1, -34, 0, 5)
+closeBtn.TextSize = 13
+
+local statusLbl = label(win, "الحالة: جاهز", 13, Color3.fromRGB(150, 255, 170), Enum.Font.Gotham)
+statusLbl.AnchorPoint = Vector2.new(0, 1)
+statusLbl.Position = UDim2.new(0, 10, 1, -6)
+statusLbl.Size = UDim2.new(1, -20, 0, 24)
+statusLbl.BackgroundTransparency = 0.4
+statusLbl.BackgroundColor3 = Color3.new(0, 0, 0)
+corner(statusLbl, 8)
+
+local function setStatus(t) statusLbl.Text = "الحالة: " .. t end
+
+-- تبويبات
+local tabBar = Instance.new("Frame")
+tabBar.Position = UDim2.new(0, 10, 0, 36)
+tabBar.Size = UDim2.new(1, -20, 0, 30)
+tabBar.BackgroundTransparency = 1
+tabBar.Parent = win
+
+local pages, tabButtons = {}, {}
+local ACTIVE, INACTIVE = Color3.fromRGB(70, 110, 230), Color3.fromRGB(35, 35, 55)
+
+local function showTab(idx)
+	for i, p in ipairs(pages) do
+		p.Visible = (i == idx)
+		tween(tabButtons[i], 0.2, {BackgroundColor3 = (i == idx) and ACTIVE or INACTIVE})
+	end
+end
+
+local function addTab(i, name)
+	local tb = makeButton(tabBar, name, 0, INACTIVE, UDim2.new(0.5, -3, 1, 0))
+	tb.Position = UDim2.new((i - 1) * 0.5, (i - 1) * 3, 0, 0)
+	tabButtons[i] = tb
+	tb.MouseButton1Click:Connect(function() showTab(i) end)
+end
+addTab(1, "🎯 التحديد")
+addTab(2, "📋 الكود")
+
+-- ===== صفحة التحديد =====
+local selPage = Instance.new("ScrollingFrame")
+selPage.Position = UDim2.new(0, 10, 0, 72)
+selPage.Size = UDim2.new(1, -20, 1, -106)
+selPage.BackgroundTransparency = 1
+selPage.BorderSizePixel = 0
+selPage.ScrollBarThickness = 4
+selPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
+selPage.CanvasSize = UDim2.new()
+selPage.Visible = false
+selPage.Parent = win
+local selLayout = Instance.new("UIListLayout")
+selLayout.Padding = UDim.new(0, 6)
+selLayout.SortOrder = Enum.SortOrder.LayoutOrder
+selLayout.Parent = selPage
+pages[1] = selPage
+
+-- ===== صفحة الكود =====
+local codePage = Instance.new("Frame")
+codePage.Position = UDim2.new(0, 10, 0, 72)
+codePage.Size = UDim2.new(1, -20, 1, -106)
+codePage.BackgroundTransparency = 1
+codePage.Visible = false
+codePage.Parent = win
+pages[2] = codePage
+
+local copyBtn = makeButton(codePage, "📋 نسخ الكود", 0, GREEN, UDim2.new(1, 0, 0, 36))
+
+local codeScroll = Instance.new("ScrollingFrame")
+codeScroll.Position = UDim2.new(0, 0, 0, 42)
+codeScroll.Size = UDim2.new(1, 0, 1, -42)
+codeScroll.BackgroundColor3 = Color3.new(0, 0, 0)
+codeScroll.BackgroundTransparency = 0.5
+codeScroll.BorderSizePixel = 0
+codeScroll.ScrollBarThickness = 4
+codeScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+codeScroll.CanvasSize = UDim2.new()
+codeScroll.Parent = codePage
+corner(codeScroll, 8)
+
+local codeBox = Instance.new("TextBox")
+codeBox.Size = UDim2.new(1, -8, 0, 0)
+codeBox.Position = UDim2.new(0, 4, 0, 4)
+codeBox.AutomaticSize = Enum.AutomaticSize.Y
+codeBox.BackgroundTransparency = 1
+codeBox.MultiLine = true
+codeBox.TextWrapped = true
+codeBox.ClearTextOnFocus = false
+codeBox.TextXAlignment = Enum.TextXAlignment.Left
+codeBox.TextYAlignment = Enum.TextYAlignment.Top
+codeBox.Font = Enum.Font.Code
+codeBox.TextSize = 12
+codeBox.TextColor3 = Color3.fromRGB(200, 230, 255)
+codeBox.PlaceholderText = "اضغط ✅ تم في صفحة التحديد ليظهر الكود هنا"
+codeBox.Text = ""
+codeBox.Parent = codeScroll
+
+-- ===== منطق التحديد =====
+local selecting, groupMode, level = false, false, 1
+local selected = {} -- {inst=, group=, hl=, count=}
+
+local function partCount(inst)
+	local n = inst:IsA("BasePart") and 1 or 0
+	for _, d in ipairs(inst:GetDescendants()) do
+		if d:IsA("BasePart") then n += 1 end
+	end
+	return n
+end
+
+local countLbl
+local function refreshList()
+	for _, c in ipairs(selPage:GetChildren()) do
+		if c.Name == "Row" then c:Destroy() end
+	end
+	countLbl.Text = "المحدد: " .. #selected
+	for i, e in ipairs(selected) do
+		local row = Instance.new("Frame")
+		row.Name = "Row"
+		row.LayoutOrder = 100 + i
+		row.Size = UDim2.new(1, -6, 0, 30)
+		row.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+		row.Parent = selPage
+		corner(row, 7)
+
+		local txt = (e.group and "📦 " or "🧱 ") .. e.inst.Name
+		if e.group then txt ..= "  (" .. e.count .. " Part)" end
+		local nm = label(row, txt, 13)
+		nm.Position = UDim2.new(0, 8, 0, 0)
+		nm.Size = UDim2.new(1, -44, 1, 0)
+		nm.TextXAlignment = Enum.TextXAlignment.Left
+		nm.TextTruncate = Enum.TextTruncate.AtEnd
+
+		local x = makeButton(row, "✖", 0, RED, UDim2.new(0, 28, 0, 22))
+		x.Position = UDim2.new(1, -34, 0.5, -11)
+		x.TextSize = 12
+		x.MouseButton1Click:Connect(function()
+			if e.hl then e.hl:Destroy() end
+			table.remove(selected, table.find(selected, e))
+			refreshList()
+		end)
+	end
+end
+
+local function toggleSelect(part)
+	if part:IsA("Terrain") then return setStatus("لا يمكن تحديد التضاريس") end
+	local inst, group = part, false
+	if groupMode then
+		local g = part
+		for _ = 1, level do
+			g = g and g.Parent
+			if not g or g == workspace then
+				g = nil
+				break
+			end
+		end
+		if g then inst, group = g, true end
+	end
+
+	for i, e in ipairs(selected) do
+		if e.inst == inst then
+			if e.hl then e.hl:Destroy() end
+			table.remove(selected, i)
+			refreshList()
+			return setStatus("أُزيل: " .. inst.Name)
+		end
+	end
+
+	local entry = {inst = inst, group = group, count = group and partCount(inst) or 1}
+	pcall(function()
+		local hl = Instance.new("Highlight")
+		hl.Adornee = inst
+		hl.FillColor = group and Color3.fromRGB(80, 170, 255) or Color3.fromRGB(80, 255, 120)
+		hl.FillTransparency = 0.55
+		hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+		hl.Parent = gui
+		entry.hl = hl
+	end)
+	table.insert(selected, entry)
+	refreshList()
+	setStatus("أُضيف: " .. inst.Name)
+end
+
+local function pickTarget(pos)
+	local cam = workspace.CurrentCamera
+	local ray = cam:ViewportPointToRay(pos.X, pos.Y)
+	local rp = RaycastParams.new()
+	rp.FilterType = Enum.RaycastFilterType.Exclude
+	rp.FilterDescendantsInstances = player.Character and {player.Character} or {}
+	local res = workspace:Raycast(ray.Origin, ray.Direction * 2000, rp)
+	return res and res.Instance
+end
+
+-- ضغطة (Tap) فقط، وليس سحب الكاميرا
+local pressed = {}
+UIS.InputBegan:Connect(function(input, processed)
+	if processed or not selecting then return end
+	local t = input.UserInputType
+	if t == Enum.UserInputType.MouseButton1 or t == Enum.UserInputType.Touch then
+		pressed[input] = input.Position
+	end
+end)
+UIS.InputEnded:Connect(function(input)
+	local sp = pressed[input]
+	if not sp then return end
+	pressed[input] = nil
+	if not selecting then return end
+	local moved = (Vector2.new(input.Position.X, input.Position.Y) - Vector2.new(sp.X, sp.Y)).Magnitude
+	if moved > 12 then return end
+	local pos
+	if input.UserInputType == Enum.UserInputType.Touch then
+		pos = Vector2.new(input.Position.X, input.Position.Y + GuiService:GetGuiInset().Y)
+	else
+		pos = UIS:GetMouseLocation()
+	end
+	local part = pickTarget(pos)
+	if part then toggleSelect(part) end
+end)
+
+-- ===== عناصر صفحة التحديد =====
+makeToggle(selPage, "🎯 وضع التحديد", 1, function(s)
+	selecting = s
+	setStatus(s and "اضغط على Part في اللعبة" or "وضع التحديد متوقف")
+end)
+
+makeToggle(selPage, "📦 تحديد كمجموعة", 2, function(s)
+	groupMode = s
+	setStatus(s and "سيُحدد المجموعة (Model/Folder)" or "سيُحدد Part واحد")
+end)
+
+local stepRow = Instance.new("Frame")
+stepRow.LayoutOrder = 3
+stepRow.Size = UDim2.new(1, 0, 0, 32)
+stepRow.BackgroundTransparency = 1
+stepRow.Parent = selPage
+
+local levelLbl = label(stepRow, "مستوى المجموعة: 1", 14)
+levelLbl.Size = UDim2.new(1, -76, 1, 0)
+levelLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+local minus = makeButton(stepRow, "−", 0, BLUE, UDim2.new(0, 34, 0, 30))
+minus.Position = UDim2.new(1, -72, 0, 1)
+local plus = makeButton(stepRow, "+", 0, BLUE, UDim2.new(0, 34, 0, 30))
+plus.Position = UDim2.new(1, -34, 0, 1)
+
+minus.MouseButton1Click:Connect(function()
+	level = math.max(1, level - 1)
+	levelLbl.Text = "مستوى المجموعة: " .. level
+end)
+plus.MouseButton1Click:Connect(function()
+	level = math.min(8, level + 1)
+	levelLbl.Text = "مستوى المجموعة: " .. level
+end)
+
+local actionRow = Instance.new("Frame")
+actionRow.LayoutOrder = 4
+actionRow.Size = UDim2.new(1, 0, 0, 38)
+actionRow.BackgroundTransparency = 1
+actionRow.Parent = selPage
+
+local doneBtn = makeButton(actionRow, "✅ تم", 0, GREEN, UDim2.new(1 / 3, -4, 1, 0))
+local testBtn = makeButton(actionRow, "🧪 تجربة", 0, BLUE, UDim2.new(1 / 3, -4, 1, 0))
+local clearBtn = makeButton(actionRow, "🧹 مسح", 0, RED, UDim2.new(1 / 3, -4, 1, 0))
+doneBtn.Position = UDim2.new(0, 0, 0, 0)
+testBtn.Position = UDim2.new(1 / 3, 2, 0, 0)
+clearBtn.Position = UDim2.new(2 / 3, 4, 0, 0)
+
+countLbl = label(selPage, "المحدد: 0", 14, Color3.fromRGB(180, 200, 255))
+countLbl.LayoutOrder = 5
+countLbl.Size = UDim2.new(1, 0, 0, 22)
+countLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+clearBtn.MouseButton1Click:Connect(function()
+	for _, e in ipairs(selected) do
+		if e.hl then e.hl:Destroy() end
+	end
+	table.clear(selected)
+	refreshList()
+	setStatus("تم المسح")
+end)
+
+-- تجربة اللمس على المحدد
+testBtn.MouseButton1Click:Connect(function()
+	task.spawn(function()
+		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+		if not root then return setStatus("لا توجد شخصية") end
+		if not firetouchinterest then return setStatus("المشغل لا يدعم firetouchinterest") end
+		local n = 0
+		local function touch(p)
+			pcall(function()
+				firetouchinterest(root, p, 0)
+				firetouchinterest(root, p, 1)
+			end)
+			n += 1
+			if n % 30 == 0 then task.wait() end
+		end
+		for _, e in ipairs(selected) do
+			if e.inst.Parent then
+				if e.inst:IsA("BasePart") then touch(e.inst) end
+				if e.group then
+					for _, d in ipairs(e.inst:GetDescendants()) do
+						if d:IsA("BasePart") then touch(d) end
+					end
+				end
+			end
+		end
+		setStatus("تجربة: لُمس " .. n .. " Part")
+	end)
+end)
+
+-- ===== توليد الكود =====
+local function pathExpr(inst)
+	local chain, cur = {}, inst
+	while cur and cur ~= game do
+		table.insert(chain, 1, cur)
+		cur = cur.Parent
+	end
+	if #chain == 0 or chain[1].Parent ~= game then return nil end
+
+	local s
+	if chain[1] == workspace then
+		s = "workspace"
+	else
+		s = "game:GetService(" .. string.format("%q", chain[1].ClassName) .. ")"
+	end
+	for i = 2, #chain do
+		local node, parent = chain[i], chain[i - 1]
+		local same = 0
+		for _, c in ipairs(parent:GetChildren()) do
+			if c.Name == node.Name then same += 1 end
+		end
+		if same > 1 then
+			-- اسم مكرر: نستخدم الترتيب بين الأبناء
+			s ..= ":GetChildren()[" .. table.find(parent:GetChildren(), node) .. "]"
+		else
+			s ..= ":FindFirstChild(" .. string.format("%q", node.Name) .. ")"
+		end
+	end
+	return s
+end
+
+local function generate()
+	local lines = {}
+	for _, e in ipairs(selected) do
+		local expr = pathExpr(e.inst)
+		if expr then
+			table.insert(lines, "\t{group = " .. tostring(e.group) .. ", get = function() return " .. expr .. " end}, -- " .. e.inst.Name:gsub("[\r\n]", " "))
+		end
+	end
+	if #lines == 0 then return nil end
+	local targets = table.concat(lines, "\n")
+	local a, b = TEMPLATE:find("--TARGETS--", 1, true)
+	return TEMPLATE:sub(1, a - 1) .. targets .. TEMPLATE:sub(b + 1), #lines
+end
+
+doneBtn.MouseButton1Click:Connect(function()
+	if #selected == 0 then return setStatus("اختر Part أو مجموعة أولا") end
+	local code, n = generate()
+	if not code then return setStatus("تعذر إنشاء مسار للعناصر") end
+	codeBox.Text = code
+	showTab(2)
+	setStatus("تم إنشاء الكود (" .. n .. " عنصر)")
+end)
+
+copyBtn.MouseButton1Click:Connect(function()
+	if codeBox.Text == "" then return setStatus("لا يوجد كود بعد") end
+	if setclipboard then
+		setclipboard(codeBox.Text)
+		setStatus("تم نسخ الكود ✔")
+	else
+		setStatus("المشغل لا يدعم النسخ، انسخ من الصندوق")
+	end
+end)
+
+-- ===== إغلاق + سحب + لون متحرك =====
+closeBtn.MouseButton1Click:Connect(function()
+	selecting = false
+	for _, e in ipairs(selected) do
+		if e.hl then e.hl:Destroy() end
+	end
+	gui:Destroy()
+end)
+
+local dragging, dragStart, startPos
+titleBar.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+		dragging, dragStart, startPos = true, i.Position, win.Position
+		i.Changed:Connect(function()
+			if i.UserInputState == Enum.UserInputState.End then dragging = false end
+		end)
+	end
+end)
+UIS.InputChanged:Connect(function(i)
+	if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+		local d = i.Position - dragStart
+		win.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+	end
+end)
+
+task.spawn(function()
+	local h = 0
+	while gui.Parent do
+		h = (h + 0.01) % 1
+		winStroke.Color = Color3.fromHSV(h, 0.6, 1)
+		task.wait(0.05)
+	end
+end)
+
+refreshList()
+showTab(1)
