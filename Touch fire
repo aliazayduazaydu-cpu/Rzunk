@@ -1,0 +1,379 @@
+-- Touch Fire (بسيط + الخلفية والألوان)
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RS = game:GetService("RunService")
+local TS = game:GetService("TweenService")
+local GuiService = game:GetService("GuiService")
+
+local lp = Players.LocalPlayer
+local BATCH = 150
+local MAX_BOX = 50 -- أقصى عدد إطارات ظاهرة (التحديد نفسه بدون حد)
+
+local selected = {}
+local selCount, boxCount = 0, 0
+local clickMode, autoOn = false, false
+
+-- ========== GUI ==========
+local parent = (gethui and gethui()) or game:GetService("CoreGui")
+pcall(function() parent:FindFirstChild("TouchFireGui"):Destroy() end)
+local gui = Instance.new("ScreenGui")
+gui.Name = "TouchFireGui"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = parent
+
+local function corner(o, r) local c = Instance.new("UICorner", o) c.CornerRadius = UDim.new(0, r) return c end
+
+local function makeDraggable(handle, target)
+	local dragging, start, startPos, conn
+	handle.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			dragging, start, startPos = true, i.Position, target.Position
+			if conn then conn:Disconnect() end
+			conn = UIS.InputChanged:Connect(function(m)
+				if dragging and (m.UserInputType == Enum.UserInputType.MouseMovement or m.UserInputType == Enum.UserInputType.Touch) then
+					local d = m.Position - start
+					target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+				end
+			end)
+			i.Changed:Connect(function()
+				if i.UserInputState == Enum.UserInputState.End then
+					dragging = false
+					if conn then conn:Disconnect() conn = nil end
+				end
+			end)
+		end
+	end)
+end
+
+-- زر الفتح/الغلق
+local toggle = Instance.new("TextButton")
+toggle.Size = UDim2.fromOffset(46, 46)
+toggle.Position = UDim2.new(0.5, -23, 0, 6)
+toggle.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+toggle.Text = "☰"
+toggle.TextColor3 = Color3.new(1, 1, 1)
+toggle.TextSize = 24
+toggle.Font = Enum.Font.GothamBold
+toggle.AutoButtonColor = false
+toggle.ZIndex = 50
+toggle.Parent = gui
+corner(toggle, 23)
+local tStroke = Instance.new("UIStroke", toggle)
+tStroke.Thickness = 2
+tStroke.Color = Color3.fromRGB(120, 90, 255)
+makeDraggable(toggle, toggle)
+
+-- القائمة
+local main = Instance.new("Frame")
+main.Size = UDim2.fromOffset(320, 275)
+main.Position = UDim2.new(0.5, -160, 0, 60)
+main.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+main.ClipsDescendants = true
+main.Visible = false
+main.Parent = gui
+corner(main, 16)
+
+local mStroke = Instance.new("UIStroke", main)
+mStroke.Thickness = 2.5
+mStroke.Color = Color3.new(1, 1, 1)
+local mGrad = Instance.new("UIGradient", mStroke)
+mGrad.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 90, 255)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 200, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 80, 200)),
+}
+
+-- الخلفية + التأثير
+local bg = Instance.new("ImageLabel")
+bg.Size = UDim2.fromScale(1, 1)
+bg.BackgroundTransparency = 1
+bg.Image = "rbxassetid://12242838336"
+bg.ScaleType = Enum.ScaleType.Crop
+bg.ImageTransparency = 0.45
+bg.ZIndex = 0
+bg.Parent = main
+corner(bg, 16)
+
+local overlay = Instance.new("Frame")
+overlay.Size = UDim2.fromScale(1, 1)
+overlay.BackgroundColor3 = Color3.new(1, 1, 1)
+overlay.BackgroundTransparency = 0.82
+overlay.ZIndex = 0
+overlay.Parent = main
+corner(overlay, 16)
+local oGrad = Instance.new("UIGradient", overlay)
+oGrad.Color = mGrad.Color
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 36)
+title.BackgroundTransparency = 1
+title.Text = "⚡ Touch Fire"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.ZIndex = 2
+title.Parent = main
+makeDraggable(title, main)
+
+local function btn(text, x, y, w, h, color)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.fromOffset(w, h)
+	b.Position = UDim2.fromOffset(x, y)
+	b.BackgroundColor3 = color
+	b.BackgroundTransparency = 0.15
+	b.Text = text
+	b.TextColor3 = Color3.new(1, 1, 1)
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 13
+	b.ZIndex = 3
+	b.Parent = main
+	corner(b, 10)
+	return b
+end
+
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, -20, 0, 20)
+status.Position = UDim2.fromOffset(10, 36)
+status.BackgroundTransparency = 1
+status.TextColor3 = Color3.fromRGB(200, 220, 255)
+status.Font = Enum.Font.Gotham
+status.TextSize = 12
+status.Text = "المحدد: 0"
+status.ZIndex = 3
+status.Parent = main
+
+local clickBtn = btn("🖱 اختيار Part", 10, 62, 145, 34, Color3.fromRGB(70, 60, 160))
+local doneBtn = btn("✅ تم", 165, 62, 70, 34, Color3.fromRGB(40, 140, 80))
+local clearBtn = btn("🗑", 245, 62, 65, 34, Color3.fromRGB(160, 40, 50))
+
+local fireSelBtn = btn("🔥 ضغط المحدد", 10, 104, 145, 34, Color3.fromRGB(200, 90, 30))
+local fireAllBtn = btn("💥 ضغط كل Parts", 165, 104, 145, 34, Color3.fromRGB(180, 50, 90))
+
+local speedBox = Instance.new("TextBox")
+speedBox.Size = UDim2.fromOffset(300, 34)
+speedBox.Position = UDim2.fromOffset(10, 146)
+speedBox.BackgroundColor3 = Color3.fromRGB(20, 20, 32)
+speedBox.BackgroundTransparency = 0.1
+speedBox.PlaceholderText = "السرعة بالثواني (0 أو فراغ = أسرع)"
+speedBox.Text = ""
+speedBox.TextColor3 = Color3.new(1, 1, 1)
+speedBox.PlaceholderColor3 = Color3.fromRGB(160, 160, 180)
+speedBox.Font = Enum.Font.Gotham
+speedBox.TextSize = 13
+speedBox.ClearTextOnFocus = false
+speedBox.ZIndex = 3
+speedBox.Parent = main
+corner(speedBox, 10)
+
+local autoBtn = btn("⏱ أوتو: مغلق", 10, 188, 300, 36, Color3.fromRGB(90, 90, 110))
+
+local hint = Instance.new("TextLabel")
+hint.Size = UDim2.new(1, -20, 0, 34)
+hint.Position = UDim2.fromOffset(10, 232)
+hint.BackgroundTransparency = 1
+hint.TextColor3 = Color3.fromRGB(190, 190, 210)
+hint.Font = Enum.Font.Gotham
+hint.TextSize = 11
+hint.TextWrapped = true
+hint.Text = "الأوتو يضغط المحدد، وإذا ما في محدد يضغط كل Parts."
+hint.ZIndex = 3
+hint.Parent = main
+
+-- ========== التحديد ==========
+local function updateStatus(extra)
+	status.Text = "المحدد: " .. selCount .. (extra and ("  |  " .. extra) or "")
+end
+
+local function select(part)
+	if selected[part] then return end
+	if boxCount < MAX_BOX then
+		local sb = Instance.new("SelectionBox")
+		sb.Adornee = part
+		sb.LineThickness = 0.05
+		sb.SurfaceTransparency = 0.5
+		sb.Parent = gui
+		selected[part] = sb
+		boxCount += 1
+	else
+		selected[part] = true
+	end
+	selCount += 1
+end
+
+local function deselect(part)
+	local v = selected[part]
+	if v then
+		if v ~= true then v:Destroy() boxCount -= 1 end
+		selected[part] = nil
+		selCount -= 1
+	end
+end
+
+clearBtn.MouseButton1Click:Connect(function()
+	for p in pairs(selected) do deselect(p) end
+	selCount, boxCount = 0, 0
+	updateStatus()
+end)
+
+-- تأثيرات الألوان: التدرج والخلفية وهي مفتوحة، وقوس القزح كل 0.1 ثانية
+task.spawn(function()
+	local t, acc = 0, 0
+	while gui.Parent do
+		local dt = RS.Heartbeat:Wait()
+		t += dt
+		acc += dt
+		if main.Visible then
+			mGrad.Rotation = (t * 90) % 360
+			oGrad.Rotation = (t * 40) % 360
+			bg.ImageTransparency = 0.45 + math.sin(t * 2) * 0.08
+		end
+		if acc >= 0.1 then
+			acc = 0
+			local c = Color3.fromHSV((t * 0.3) % 1, 1, 1)
+			tStroke.Color = c
+			for _, sb in pairs(selected) do
+				if sb ~= true then
+					sb.Color3 = c
+					sb.SurfaceColor3 = c
+				end
+			end
+		end
+	end
+end)
+
+-- ========== اختيار Part بالضغط ==========
+local function setClickMode(on)
+	clickMode = on
+	clickBtn.Text = on and "🖱 الاختيار: شغال" or "🖱 اختيار Part"
+	clickBtn.BackgroundColor3 = on and Color3.fromRGB(0, 160, 120) or Color3.fromRGB(70, 60, 160)
+	updateStatus(on and "اضغط على أي Part" or nil)
+end
+
+clickBtn.MouseButton1Click:Connect(function() setClickMode(not clickMode) end)
+doneBtn.MouseButton1Click:Connect(function() setClickMode(false) updateStatus("تم ✔") end)
+
+local function overGui(pos)
+	local function inside(f)
+		if not f.Visible then return false end
+		local p, s = f.AbsolutePosition, f.AbsoluteSize
+		return pos.X >= p.X and pos.X <= p.X + s.X and pos.Y >= p.Y and pos.Y <= p.Y + s.Y
+	end
+	return inside(main) or inside(toggle)
+end
+
+UIS.InputBegan:Connect(function(input)
+	if not clickMode then return end
+	local t = input.UserInputType
+	if t ~= Enum.UserInputType.MouseButton1 and t ~= Enum.UserInputType.Touch then return end
+
+	local pos
+	if t == Enum.UserInputType.Touch then
+		pos = Vector2.new(input.Position.X, input.Position.Y) + GuiService:GetGuiInset()
+	else
+		pos = UIS:GetMouseLocation()
+	end
+	if overGui(pos) then return end
+
+	local ray = workspace.CurrentCamera:ViewportPointToRay(pos.X, pos.Y)
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = {lp.Character}
+	params.RespectCanCollide = false
+	local res = workspace:Raycast(ray.Origin, ray.Direction * 5000, params)
+	local part = res and res.Instance
+	if part and part:IsA("BasePart") then
+		if selected[part] then deselect(part) else select(part) end
+		updateStatus()
+	end
+end)
+
+-- ========== الضغط ==========
+local function getRoot()
+	local char = lp.Character
+	return char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChildWhichIsA("BasePart"))
+end
+
+local function fireList(list, root)
+	for i = 1, #list do
+		local p = list[i]
+		if p.Parent then
+			firetouchinterest(root, p, 0)
+			firetouchinterest(root, p, 1)
+		end
+		if i % BATCH == 0 then RS.Heartbeat:Wait() end
+	end
+end
+
+local function fireSelected()
+	local root = getRoot()
+	if not root then return end
+	local list = {}
+	for p in pairs(selected) do list[#list + 1] = p end
+	fireList(list, root)
+end
+
+local function fireEverything()
+	local root = getRoot()
+	if not root then return end
+	local list = {}
+	for _, d in ipairs(workspace:GetDescendants()) do
+		if d:IsA("BasePart") and not d:IsDescendantOf(lp.Character) then
+			list[#list + 1] = d
+		end
+	end
+	fireList(list, root)
+end
+
+local function check()
+	if not firetouchinterest then
+		updateStatus("executor ما يدعم firetouchinterest")
+		return false
+	end
+	return true
+end
+
+fireSelBtn.MouseButton1Click:Connect(function()
+	if not check() then return end
+	task.spawn(function() pcall(fireSelected) updateStatus("تم ✔") end)
+end)
+
+fireAllBtn.MouseButton1Click:Connect(function()
+	if not check() then return end
+	task.spawn(function() pcall(fireEverything) updateStatus("تم ضغط الكل ✔") end)
+end)
+
+autoBtn.MouseButton1Click:Connect(function()
+	if not check() then return end
+	autoOn = not autoOn
+	autoBtn.Text = autoOn and "⏱ أوتو: شغال" or "⏱ أوتو: مغلق"
+	autoBtn.BackgroundColor3 = autoOn and Color3.fromRGB(0, 160, 90) or Color3.fromRGB(90, 90, 110)
+	if autoOn then
+		task.spawn(function()
+			while autoOn and gui.Parent do
+				if selCount > 0 then pcall(fireSelected) else pcall(fireEverything) end
+				local s = tonumber(speedBox.Text) or 0
+				if s <= 0 then RS.Heartbeat:Wait() else task.wait(s) end
+			end
+		end)
+	end
+end)
+
+-- ========== فتح / غلق مع تأثير ==========
+local isOpen = false
+local fullSize = main.Size
+toggle.MouseButton1Click:Connect(function()
+	isOpen = not isOpen
+	if isOpen then
+		main.Size = UDim2.fromOffset(fullSize.X.Offset, 0)
+		main.Visible = true
+		TS:Create(main, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = fullSize}):Play()
+	else
+		local tw = TS:Create(main, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Size = UDim2.fromOffset(fullSize.X.Offset, 0)})
+		tw:Play()
+		tw.Completed:Wait()
+		main.Visible = false
+	end
+	toggle.Text = isOpen and "✕" or "☰"
+end)
