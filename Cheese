@@ -59,3 +59,20 @@ local Window = WindUI:CreateWindow({
         -- API = {} ← Services. Read about it below ↓
     },
 })
+local Tab = Window:Tab({
+    Title = "قائمة رائيسيه",
+    Icon = "bird", -- optional
+    Locked = false,
+})
+local Code = Tab:Code({
+    Title = "Code",
+    Code = [[حسابي في روبلوكس hdjjlawe]]
+})
+local Code = Tab:Code({
+    Title = "Code",
+    Code = [[حسابي في يوتيوب : مطور علاوي]]
+})
+local Code = Tab:Code({
+    Title = "Code",
+    Code = [[سكربت لماب escape chesse]]
+})
