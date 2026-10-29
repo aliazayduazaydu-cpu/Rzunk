@@ -172,3 +172,32 @@ local Tab = Window:Tab({
     Icon = "bird", -- optional
     Locked = false,
 })
+
+local Toggle = Tab:Toggle({
+    Title = "Toggle",
+    Desc = "Toggle Description",
+    Icon = "bird",
+    Type = "Checkbox",
+    Value = false, -- default value
+    Callback = function(state) 
+        print("Toggle Activated" .. tostring(state))
+    end
+})
+--part
+--workspace.Neighbours.Crazy[""]
+
+
+local Toggle = Tab:Toggle({
+    Title = "Toggle",
+    Desc = "Toggle Description",
+    Icon = "bird",
+    Type = "Checkbox",
+    Value = false, -- default value
+    Callback = function(state) 
+        print("Toggle Activated" .. tostring(state))
+    end
+})
+
+--part
+--workspace.BadGuys
+--يسوي esp model داخله
