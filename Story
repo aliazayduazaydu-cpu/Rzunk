@@ -1,63 +1,47 @@
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+local PURPLE = Color3.fromRGB(139, 92, 246)
+
+-- ثيم بنفسجي
+local themeName = "Purple"
+local ok = pcall(function()
+    WindUI:AddTheme({
+        Name = "Purple",
+        Accent = Color3.fromHex("#8B5CF6"),
+        Dialog = Color3.fromHex("#1E1433"),
+        Outline = Color3.fromHex("#A78BFA"),
+        Text = Color3.fromHex("#F5F3FF"),
+        Placeholder = Color3.fromHex("#C4B5FD"),
+        Background = Color3.fromHex("#140D26"),
+        Button = Color3.fromHex("#5B21B6"),
+        Icon = Color3.fromHex("#C4B5FD"),
+    })
+end)
+if not ok then
+    themeName = "Dark"
+end
+
 local Window = WindUI:CreateWindow({
     Title = "سكربت ali",
-    Icon = "door-open", -- lucide icon
+    Icon = "door-open",
     Author = "by .مطور علاوي",
-    Folder = "سكربت ماب جبن",
-    
-    -- ↓ This all is Optional. You can remove it.
+    Folder = "ali_script",
     Size = UDim2.fromOffset(580, 460),
     MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),
-    ToggleKey = Enum.KeyCode.LeftShift,
+    ToggleKey = Enum.KeyCode.RightShift,
     Transparent = true,
-    Theme = "Dark",
+    Theme = themeName,
     Resizable = true,
     SideBarWidth = 200,
-    BackgroundImageTransparency = 0.42,
     HideSearchBar = true,
     ScrollBarEnabled = false,
-    
-    -- ↓ Optional. You can remove it.
-    --[[ You can set 'rbxassetid://' or video to Background.
-        'rbxassetid://':
-            Background = "rbxassetid://9851878307", -- rbxassetid
-        Video:
-            Background = "video:YOUR-RAW-LINK-TO-VIDEO.webm", -- video 
-    --]]
-    
-    -- ↓ Optional. You can remove it.
-    User = {
-        Enabled = true,
-        hdjjlawe = true,
-        Callback = function()
-            print("clicked")
-        end,
-    },
-    
-    --       remove this all, 
-    -- !  ↓  if you DON'T need the key system
-    KeySystem = { 
-        -- ↓ Optional. You can remove it.
-        Key = { "1234", "story" },
-        
-        Note = "Example Key System.",
-        
-        -- ↓ Optional. You can remove it.
-        Thumbnail = {
-            Image = "rbxassetid://",
-            Title = "story مفتاح : واحد ثنين ثلاثة اربعه أو",
-        },
-        
-        -- ↓ Optional. You can remove it.
-        URL = "YOUR LINK TO GET KEY (Discord, Linkvertise, Pastebin, etc.)",
-        
-        -- ↓ Optional. You can remove it.
-        SaveKey = false, -- automatically save and load the key.
-        
-        -- ↓ Optional. You can remove it.
-        -- API = {} ← Services. Read about it below ↓
-    },
+    BackgroundImageTransparency = 0.42,
 })
 local Tab = Window:Tab({
     Title = "قائمة رائيسيه",
