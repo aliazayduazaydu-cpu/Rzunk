@@ -378,3 +378,28 @@ Tab:Button({
         ))
     end
 })
+
+local Tab = Window:Tab({
+    Title = "اخذ جبن و ادوات",
+    Icon = "bird", -- optional
+    Locked = false,
+})
+
+local Button = Tab:Button({
+    Title = "اخذ جبنه",
+    Desc = "يعطيك وحده",
+    Locked = false,
+    Callback = function()
+
+local Event = game:GetService("ReplicatedStorage").AddCheese
+Event:FireServer()
+    end
+})
+local Button = Tab:Button({
+    Title = "اخذ كل جبن",
+    Desc = "مبينه",
+    Locked = false,
+    Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/aliazayduazaydu-cpu/Banana/refs/heads/main/%D8%AC%D8%A8%D9%86%D9%87"))()
+    end
+})
