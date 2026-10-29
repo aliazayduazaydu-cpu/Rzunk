@@ -76,3 +76,72 @@ local Code = Tab:Code({
     Title = "Code",
     Code = [[سكربت لماب escape chesse]]
 })
+
+--____________________________________________________
+--____________________________________________________
+
+localTab = Window:Tab({
+    Title = "قائمه ادوات",
+    Icon = "bird", -- optional
+    Locked = false,
+})
+
+local Button = Tab:Button({
+    Title = "اخذ تفاحا",
+    Desc = "يعطيك تفاحا",
+    Locked = false,
+    Callback = function()
+
+    end
+})
+
+--اوتو تفاحات
+
+local Button = Tab:Button({
+    Title = "اخذ ببسي",
+    Desc = "يعطيك ببسي",
+    Locked = false,
+    Callback = function()
+
+    end
+})
+
+-- اوتو اخذ ببسي
+
+local Button = Tab:Button({
+    Title = "اخذ كوكيز",
+    Desc = "يعطيك كوكيز",
+    Locked = false,
+    Callback = function()
+
+    end
+})
+
+-- اوتو اخذ كوكيز
+
+local Button = Tab:Button({
+    Title = "اخذ جبس",
+    Desc = "يطيك جبس",
+    Locked = false,
+    Callback = function()
+
+    end
+})
+
+local Button = Tab:Button({
+    Title = "اخذ سلاح",
+    Desc = "يطيك سلاح دفاع عن نفس",
+    Locked = false,
+    Callback = function()
+
+    end
+})
+
+--____________________________________________________
+--____________________________________________________
+
+local Tab = Window:Tab({
+    Title = "قائمة esp",
+    Icon = "bird", -- optional
+    Locked = false,
+})
