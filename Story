@@ -159,7 +159,7 @@ local Button = Tab:Button({
     Callback = function()
 local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
 Event:FireServer(
-    "Pitchfork"
+    "Bat"
 )
     end
 })
