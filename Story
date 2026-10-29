@@ -80,8 +80,8 @@ local Code = Tab:Code({
 --____________________________________________________
 --____________________________________________________
 
-localTab = Window:Tab({
-    Title = "قائمه ادوات",
+local Tab = Window:Tab({
+    Title = "قائمة ادوات",
     Icon = "bird", -- optional
     Locked = false,
 })
