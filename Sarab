@@ -1,2 +1,13 @@
 مجون حاره
 workspace.GameAI.Mjnoon
+
+اماكن سيف زون
+workspace.Safezones:GetChildren()[4]
+workspace.Safezones:GetChildren()[2]
+workspace.Safezones:GetChildren()[3]
+workspace.Safezones.Part
+workspace.Safezones:GetChildren()[6]
+workspace.Safezones:GetChildren()[5]
+
+
+
