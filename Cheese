@@ -158,3 +158,61 @@ Tab:Toggle({
         end
     end
 })
+local Folder = workspace:WaitForChild("FindCheese")
+local ESPs = {}
+
+local function SetESP(index, enabled)
+    local key = tostring(index)
+
+    if ESPs[key] then
+        ESPs[key]:Destroy()
+        ESPs[key] = nil
+    end
+
+    if not enabled then
+        return
+    end
+
+    local children = Folder:GetChildren()
+    local item = children[index]
+    local cheese = item and item:FindFirstChild("Cheese")
+
+    if not cheese then
+        warn("لم يتم العثور على Cheese رقم " .. index)
+        return
+    end
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "CheeseESP_" .. key
+    highlight.Adornee = cheese
+    highlight.FillColor = Color3.fromRGB(0, 100, 255)
+    highlight.OutlineColor = Color3.fromRGB(0, 100, 255)
+    highlight.FillTransparency = 1
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = cheese
+
+    ESPs[key] = highlight
+end
+
+Tab:Toggle({
+    Title = "ESP كل الجبن",
+    Default = false,
+    Callback = function(value)
+        for i = 1, 9 do
+            SetESP(i, value)
+        end
+    end
+})
+
+for i = 1, 9 do
+    local index = i
+
+    Tab:Toggle({
+        Title = "ESP جبنة " .. index,
+        Default = false,
+        Callback = function(value)
+            SetESP(index, value)
+        end
+    })
+end
