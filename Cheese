@@ -46,7 +46,7 @@ local Window = WindUI:CreateWindow({
         -- ↓ Optional. You can remove it.
         Thumbnail = {
             Image = "rbxassetid://",
-            Title = "واحد ثنين ثلاثة اربعه أو علاوي",
+            Title = "مفتاح : واحد ثنين ثلاثة اربعه أو علاوي",
         },
         
         -- ↓ Optional. You can remove it.
