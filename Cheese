@@ -124,3 +124,37 @@ Tab:Toggle({
         end
     end,
 })
+local Tab = Window:Tab({
+    Title = "esp اشياء",
+    Icon = "", -- optional
+    Locked = false,
+})
+Tab:Toggle({
+    Title = "ESP فار",
+    Default = false,
+    Callback = function(Value)
+        local part = workspace:FindFirstChild("Mouse")
+        if not part then
+            warn("ما لقيت workspace.Mouse")
+            return
+        end
+
+        local old = part:FindFirstChild("MouseESP")
+
+        if Value then
+            if not old then
+                local esp = Instance.new("Highlight")
+                esp.Name = "MouseESP"
+                esp.Adornee = part
+                esp.FillColor = Color3.fromRGB(255, 0, 0)
+                esp.OutlineColor = Color3.fromRGB(255, 0, 0)
+                esp.FillTransparency = 0.5
+                esp.OutlineTransparency = 0
+                esp.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                esp.Parent = part
+            end
+        elseif old then
+            old:Destroy()
+        end
+    end
+})
