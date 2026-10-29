@@ -403,3 +403,68 @@ local Button = Tab:Button({
 loadstring(game:HttpGet("https://raw.githubusercontent.com/aliazayduazaydu-cpu/Banana/refs/heads/main/%D8%AC%D8%A8%D9%86%D9%87"))()
     end
 })
+
+local Items = {
+    ["مفتاح أزرق"] = 195,
+    ["مفتاح أصفر"] = 52,
+    ["بيبسي"] = 156,
+    ["مفتاح أبيض"] = 235,
+    ["مفتاح بنفسجي"] = 220,
+    ["مفتاح أخضر"] = 262,
+    ["مفتاح أحمر"] = 260,
+}
+
+local function GetDetector(name, index)
+    local item
+
+    if name == "خشبة" then
+        item = workspace:FindFirstChild("Handle")
+    else
+        item = workspace:GetChildren()[index]
+    end
+
+    if not item then
+        warn("لم يتم العثور على: " .. name)
+        return nil
+    end
+
+    return item:FindFirstChildWhichIsA("ClickDetector", true)
+end
+
+local function ClickItem(name, index)
+    local detector = GetDetector(name, index)
+
+    if detector and type(fireclickdetector) == "function" then
+        fireclickdetector(detector)
+    else
+        warn("لم يتم العثور على ClickDetector أو أن الدالة غير متاحة: " .. name)
+    end
+end
+
+Tab:Button({
+    Title = "أخذ خشبة",
+    Callback = function()
+        ClickItem("خشبة")
+    end
+})
+
+for name, index in pairs(Items) do
+    Tab:Button({
+        Title = "أخذ " .. name,
+        Callback = function()
+            ClickItem(name, index)
+        end
+    })
+end
+
+Tab:Button({
+    Title = "أخذ كل الأدوات",
+    Callback = function()
+        for name, index in pairs(Items) do
+            ClickItem(name, index)
+            task.wait(0.2)
+        end
+
+        ClickItem("خشبة")
+    end
+})
