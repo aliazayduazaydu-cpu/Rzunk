@@ -1,9 +1,9 @@
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 local Window = WindUI:CreateWindow({
-    Title = "علاوي hub",
+    Title = "سكربت ali",
     Icon = "door-open", -- lucide icon
-    Author = "by .ftgs and .ftgs",
-    Folder = "سلام عليكم",
+    Author = "by .مطور علاوي",
+    Folder = "سكربت ماب جبن",
     
     -- ↓ This all is Optional. You can remove it.
     Size = UDim2.fromOffset(580, 460),
@@ -11,7 +11,7 @@ local Window = WindUI:CreateWindow({
     MaxSize = Vector2.new(850, 560),
     ToggleKey = Enum.KeyCode.LeftShift,
     Transparent = true,
-    Theme = "purple",
+    Theme = "Dark",
     Resizable = true,
     SideBarWidth = 200,
     BackgroundImageTransparency = 0.42,
@@ -29,7 +29,7 @@ local Window = WindUI:CreateWindow({
     -- ↓ Optional. You can remove it.
     User = {
         Enabled = true,
-        Anonymous = true,
+        hdjjlawe = true,
         Callback = function()
             print("clicked")
         end,
@@ -46,7 +46,7 @@ local Window = WindUI:CreateWindow({
         -- ↓ Optional. You can remove it.
         Thumbnail = {
             Image = "rbxassetid://",
-            Title = "Thumbnail",
+            Title = "story مفتاح : واحد ثنين ثلاثة اربعه أو",
         },
         
         -- ↓ Optional. You can remove it.
@@ -58,4 +58,21 @@ local Window = WindUI:CreateWindow({
         -- ↓ Optional. You can remove it.
         -- API = {} ← Services. Read about it below ↓
     },
+})
+local Tab = Window:Tab({
+    Title = "قائمة رائيسيه",
+    Icon = "bird", -- optional
+    Locked = false,
+})
+local Code = Tab:Code({
+    Title = "Code",
+    Code = [[حسابي في روبلوكس hdjjlawe]]
+})
+local Code = Tab:Code({
+    Title = "Code",
+    Code = [[حسابي في يوتيوب : مطور علاوي]]
+})
+local Code = Tab:Code({
+    Title = "Code",
+    Code = [[سكربت لماب escape chesse]]
 })
