@@ -36,3 +36,19 @@ workspace.Notebook.Handle
 مدرسه
 164.4062805, 422.7326965, -500.3247681
 
+غرفه مدير مباشره
+
+92.3413849, 10.8879070, -130.2526703
+
+مفاتيح 
+
+workspace.Key104
+workspace.Key205
+workspace.Key302
+workspace.Key305
+workspace.Keys
+workspace.Drawerz.Drawer.KeyManager
+
+وحش مدرسه
+
+workspace.GameAI.TreeWoman
