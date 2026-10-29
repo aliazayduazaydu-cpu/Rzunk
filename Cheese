@@ -81,47 +81,7 @@ local Tab = Window:Tab({
     Icon = "bird", -- optional
     Locked = false,
 })
-local Button = Tab:Button({
-    Title = "v1 أوتو ضغط جبنه مزعجة",
-    Desc = "يطلع صوت",
-    Locked = false,
-    Callback = function()
-local cheese = workspace:GetChildren()[148]
-local detector = cheese:FindFirstChildWhichIsA("ClickDetector", true)
 
-if not detector then
-    warn("ما حصلت ClickDetector داخل Cheese")
-    return
-end
-
-while true do
-    fireclickdetector(detector)
-    task.wait()
-end
-    end
-})
-local Button = Tab:Button({
-    Title = "v2 أوتو ضغط جبنه مزعجة",
-    Desc = "يطلع صوت",
-    Locked = false,
-    Callback = function()
-workspace:GetChildren()[98].Cheese2
-if not cheese then
-    warn("ما حصلت Cheese")
-    return
-end
-
-local detector = cheese:FindFirstChildWhichIsA("ClickDetector", true)
-if not detector then
-    warn("ما حصلت ClickDetector داخل Cheese")
-    return
-end
-while true do
-    fireclickdetector(detector)
-    task.wait()
-end
-    end
-})
 local Button = Tab:Button({
     Title = "حذف فار",
     Desc = "يشيله",
