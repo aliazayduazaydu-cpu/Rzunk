@@ -98,7 +98,25 @@ Event:FireServer(
     end
 })
 
---اوتو تفاحات
+local Running = false
+
+Tab:Toggle({
+    Title = "اوتو اخذ تفاحا",
+    Default = false,
+    Callback = function(Value)
+        Running = Value
+
+        if Value then
+            task.spawn(function()
+                while Running do
+                    local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+                    Event:FireServer("Apple")
+                    task.wait()
+                end
+            end)
+        end
+    end
+})
 
 local Button = Tab:Button({
     Title = "اخذ بيزا",
@@ -124,7 +142,25 @@ Event:FireServer(
     end
 })
 
--- اوتو اخذ ببسي
+local Running = false
+
+Tab:Toggle({
+    Title = "أوتو اخذ ببسي",
+    Default = false,
+    Callback = function(Value)
+        Running = Value
+
+        if Value then
+            task.spawn(function()
+                while Running do
+                    local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+                    Event:FireServer("BloxyCola")
+                    task.wait()
+                end
+            end)
+        end
+    end
+})
 
 local Button = Tab:Button({
     Title = "اخذ كوكيز",
@@ -138,7 +174,25 @@ Event:FireServer(
     end
 })
 
--- اوتو اخذ كوكيز
+local Running = false
+
+Tab:Toggle({
+    Title = "اوتو اخذ كوكيز",
+    Default = false,
+    Callback = function(Value)
+        Running = Value
+
+        if Value then
+            task.spawn(function()
+                while Running do
+                    local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+                    Event:FireServer("Cookie")
+                    task.wait()
+                end
+            end)
+        end
+    end
+})
 
 local Button = Tab:Button({
     Title = "اخذ جبس",
