@@ -216,3 +216,73 @@ for i = 1, 9 do
         end
     })
 end
+
+local Tab = Window:Tab({
+    Title = "اماكن سريه",
+    Icon = "bird", -- optional
+    Locked = false,
+})
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+
+local function TeleportTo(position)
+    local character = Player.Character
+        or Player.CharacterAdded:Wait()
+
+    local root = character:WaitForChild("HumanoidRootPart")
+    root.CFrame = CFrame.new(position)
+end
+
+Tab:Button({
+    Title = "مكان سري",
+    Callback = function()
+        TeleportTo(Vector3.new(
+            -273.0051880, 48.4725189, -48.6996994
+        ))
+    end
+})
+
+Tab:Button({
+    Title = "مكان سري",
+    Callback = function()
+        TeleportTo(Vector3.new(
+            -306.2360535, 50.0450249, -120.6352692
+        ))
+    end
+})
+
+Tab:Button({
+    Title = "مكان سري",
+    Callback = function()
+        TeleportTo(Vector3.new(
+            30.3514843, 31.4683514, -482.1938171
+        ))
+    end
+})
+
+Tab:Button({
+    Title = "النهايه 2",
+    Callback = function()
+        TeleportTo(Vector3.new(
+            -16.5981064, 6.6135464, 22.1616859
+        ))
+    end
+})
+
+Tab:Button({
+    Title = "مكان اصعب جبنه",
+    Callback = function()
+        TeleportTo(Vector3.new(
+            -147.0783386, 5.4735904, -234.0024414
+        ))
+    end
+})
+
+Tab:Button({
+    Title = "مكان نهايه",
+    Callback = function()
+        TeleportTo(Vector3.new(
+            1456.4144287, 59.0188599, -136.5984497
+        ))
+    end
+})
