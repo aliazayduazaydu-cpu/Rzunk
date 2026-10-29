@@ -102,8 +102,8 @@ local Lighting = game:GetService("Lighting")
 local BrightEnabled = false
 
 Tab:Toggle({
-    Title = "Light All",
-    Desc = "تشغيل أو إيقاف الإضاءة",
+    Title = "رفع اضاءه",
+    Desc = "",
     Default = false,
 
     Callback = function(Value)
@@ -126,7 +126,7 @@ Tab:Toggle({
 })
 local Tab = Window:Tab({
     Title = "esp اشياء",
-    Icon = "", -- optional
+    Icon = "bird", -- optional
     Locked = false,
 })
 Tab:Toggle({
@@ -158,6 +158,98 @@ Tab:Toggle({
         end
     end
 })
+
+local ESPFolder = Instance.new("Folder")
+ESPFolder.Name = "ToolsESP"
+ESPFolder.Parent = game:GetService("CoreGui")
+
+local ToolObjects = {
+    ["مفتاح أزرق"] = function()
+        return workspace:GetChildren()[195]
+    end,
+
+    ["مفتاح أصفر"] = function()
+        return workspace:GetChildren()[52]
+    end,
+
+    ["بيبسي"] = function()
+        return workspace:GetChildren()[156]
+    end,
+
+    ["خشبة"] = function()
+        return workspace:FindFirstChild("Handle")
+    end,
+
+    ["مفتاح أبيض"] = function()
+        return workspace:GetChildren()[235]
+    end,
+
+    ["مفتاح بنفسجي"] = function()
+        return workspace:GetChildren()[220]
+    end,
+
+    ["مفتاح أخضر"] = function()
+        return workspace:GetChildren()[262]
+    end,
+
+    ["مفتاح أحمر"] = function()
+        return workspace:GetChildren()[260]
+    end,
+}
+
+local ActiveESP = {}
+
+local function SetToolESP(name, enabled)
+    if ActiveESP[name] then
+        ActiveESP[name]:Destroy()
+        ActiveESP[name] = nil
+    end
+
+    if not enabled then
+        return
+    end
+
+    local getter = ToolObjects[name]
+    local object = getter and getter()
+
+    if not object then
+        warn("لم يتم العثور على الأداة: " .. name)
+        return
+    end
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESP_" .. name
+    highlight.Adornee = object
+    highlight.FillColor = Color3.fromRGB(0, 255, 0)
+    highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
+    highlight.FillTransparency = 1
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = ESPFolder
+
+    ActiveESP[name] = highlight
+end
+
+Tab:Toggle({
+    Title = "ESP كل الأدوات",
+    Default = false,
+    Callback = function(value)
+        for name in pairs(ToolObjects) do
+            SetToolESP(name, value)
+        end
+    end
+})
+
+for name in pairs(ToolObjects) do
+    Tab:Toggle({
+        Title = "ESP " .. name,
+        Default = false,
+        Callback = function(value)
+            SetToolESP(name, value)
+        end
+    })
+end
+
 local Folder = workspace:WaitForChild("FindCheese")
 local ESPs = {}
 
