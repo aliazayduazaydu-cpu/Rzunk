@@ -119,7 +119,10 @@ local Button = Tab:Button({
     Desc = "يعطيك كوكيز",
     Locked = false,
     Callback = function()
-
+local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+Event:FireServer(
+    "Cookie"
+)
     end
 })
 
