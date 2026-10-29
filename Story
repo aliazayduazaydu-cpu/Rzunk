@@ -66,7 +66,7 @@ local Code = Tab:Code({
 
 local Tab = Window:Tab({
     Title = "قائمة ادوات",
-    Icon = "bird", -- optional
+    Icon = "wrench", -- optional
     Locked = false,
 })
 
@@ -207,14 +207,14 @@ Event:FireServer(
 
 local Tab = Window:Tab({
     Title = "قائمة esp",
-    Icon = "bird", -- optional
+    Icon = "zap", -- optional
     Locked = false,
 })
 
 local Toggle = Tab:Toggle({
     Title = "Toggle",
     Desc = "Toggle Description",
-    Icon = "bird",
+    Icon = "zap",
     Type = "Checkbox",
     Value = false, -- default value
     Callback = function(state) 
@@ -228,7 +228,7 @@ local Toggle = Tab:Toggle({
 local Toggle = Tab:Toggle({
     Title = "Toggle",
     Desc = "Toggle Description",
-    Icon = "bird",
+    Icon = "zap",
     Type = "Checkbox",
     Value = false, -- default value
     Callback = function(state) 
