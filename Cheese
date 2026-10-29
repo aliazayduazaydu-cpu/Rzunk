@@ -97,3 +97,30 @@ else
 end
     end
 })
+
+local Lighting = game:GetService("Lighting")
+local BrightEnabled = false
+
+Tab:Toggle({
+    Title = "Light All",
+    Desc = "تشغيل أو إيقاف الإضاءة",
+    Default = false,
+
+    Callback = function(Value)
+        BrightEnabled = Value
+
+        if Value then
+            task.spawn(function()
+                while BrightEnabled do
+                    Lighting.Brightness = 2
+                    Lighting.ClockTime = 14
+                    Lighting.FogEnd = 100000
+                    Lighting.GlobalShadows = false
+                    Lighting.Ambient = Color3.fromRGB(180, 180, 180)
+
+                    task.wait(0.5)
+                end
+            end)
+        end
+    end,
+})
