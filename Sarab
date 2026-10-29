@@ -9,5 +9,12 @@ workspace.Safezones.Part
 workspace.Safezones:GetChildren()[6]
 workspace.Safezones:GetChildren()[5]
 
+fire proximity prompt يسوي اخذ ل اغراض بقاله بس يقريب ب نضام
+workspace.BoxWater.Handle
+workspace.Milks.Handle
+workspace.Notebook.Handle
+workspace.Rice.Handle
+
+
 
 
