@@ -225,20 +225,101 @@ local Toggle = Tab:Toggle({
 --workspace.Neighbours.Crazy[""]
 
 
-local Toggle = Tab:Toggle({
-    Title = "Toggle",
-    Desc = "Toggle Description",
-    Icon = "zap",
-    Type = "Checkbox",
-    Value = false, -- default value
-    Callback = function(state) 
-        print("Toggle Activated" .. tostring(state))
+
+--workspace.BadGuys[" "]
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local ESPEnabled = false
+local SelectedPlayer = nil
+local SelectedESP = false
+
+local function CreateESP(Player)
+    if Player == LocalPlayer then return end
+
+    local Character = Player.Character
+    if not Character then return end
+
+    local Highlight = Character:FindFirstChild("PlayerESP")
+
+    if not Highlight then
+        Highlight = Instance.new("Highlight")
+        Highlight.Name = "PlayerESP"
+        Highlight.FillColor = Color3.fromRGB(255, 0, 0)
+        Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        Highlight.FillTransparency = 0.5
+        Highlight.Parent = Character
+    end
+end
+
+local function RemoveESP(Player)
+    if Player.Character then
+        local ESP = Player.Character:FindFirstChild("PlayerESP")
+        if ESP then ESP:Destroy() end
+    end
+end
+
+local function UpdateAllESP()
+    for _, Player in ipairs(Players:GetPlayers()) do
+        if ESPEnabled then
+            CreateESP(Player)
+        else
+            RemoveESP(Player)
+        end
+    end
+end
+
+-- ESP جميع اللاعبين
+Tab:Toggle({
+    Title = "ESP لاعبين",
+    Default = false,
+    Callback = function(Value)
+        ESPEnabled = Value
+        UpdateAllESP()
     end
 })
 
---part
---workspace.BadGuys
---يسوي esp model داخله
+-- اختيار لاعب
+local PlayerNames = {}
 
---workspace.BadGuys[" "]
-ل وحش
+for _, Player in ipairs(Players:GetPlayers()) do
+    if Player ~= LocalPlayer then
+        table.insert(PlayerNames, Player.Name)
+    end
+end
+
+Tab:Dropdown({
+    Title = "اختيار لاعب",
+    Values = PlayerNames,
+    Callback = function(Value)
+        SelectedPlayer = Players:FindFirstChild(Value)
+    end
+})
+
+-- ESP اللاعب المحدد
+Tab:Toggle({
+    Title = "ESP اللاعب",
+    Default = false,
+    Callback = function(Value)
+        SelectedESP = Value
+
+        if SelectedPlayer then
+            if Value then
+                CreateESP(SelectedPlayer)
+            else
+                RemoveESP(SelectedPlayer)
+            end
+        end
+    end
+})
+
+-- تحديث الشخصيات بعد إعادة الظهور
+Players.PlayerAdded:Connect(function(Player)
+    Player.CharacterAdded:Connect(function()
+        task.wait(1)
+        if ESPEnabled or (SelectedESP and SelectedPlayer == Player) then
+            CreateESP(Player)
+        end
+    end)
+end)
