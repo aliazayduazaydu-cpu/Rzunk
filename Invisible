@@ -672,7 +672,7 @@ local function getPlayerNames()
 end
 
 local CopyTab = Window:Tab({
-    Title = "Copy Tools",
+    Title = "قائمة نسخ ادوات",
     Icon = "copy",
     Locked = false,
 })
@@ -688,7 +688,7 @@ CopyTab:Button({
             end
         end
         WindUI:Notify({
-            Title = "Copy All Tools",
+            Title = "نسخ ادوات جميع لاعبين",
             Content = "تم نسخ " .. total .. " أداة",
             Duration = 3,
         })
@@ -706,15 +706,15 @@ local PlayerDropdown = CopyTab:Dropdown({
 })
 
 CopyTab:Button({
-    Title = "Refresh Players",
-    Desc = "تحديث قائمة اللاعبين",
+    Title = "تحديث قائمة لاعبين",
+    Desc = "حته يضهر لاعبين جديدين",
     Callback = function()
         PlayerDropdown:Refresh(getPlayerNames())
     end,
 })
 
 CopyTab:Button({
-    Title = "Copy Player Tools",
+    Title = "نسخ ادوات لاعب",
     Desc = "نسخ أدوات اللاعب المختار فقط",
     Callback = function()
         if not selectedName then
@@ -728,7 +728,7 @@ CopyTab:Button({
         end
         local count = copyToolsFrom(target)
         WindUI:Notify({
-            Title = "Copy Player Tools",
+            Title = "نسخ ادوات لاعب",
             Content = "تم نسخ " .. count .. " أداة من " .. selectedName,
             Duration = 3,
         })
