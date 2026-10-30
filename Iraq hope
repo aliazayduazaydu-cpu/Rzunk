@@ -523,45 +523,55 @@ InfoTab:Code({
 
 InfoTab:Code({
     Title = "الي يصلي",
-    Code = [[]],
+    Code = [[u6_9u]],
 })
 
 InfoTab:Code({
-    Title = "Code",
-    Code = [[]],
+    Title = "عشوائي",
+    Code = [[Breadtgb]],
 })
 
 InfoTab:Code({
-    Title = "Code",
-    Code = [[]],
+    Title = "صغير",
+    Code = [[Egoo2929]],
 })
 
 InfoTab:Code({
-    Title = "Code",
-    Code = [[]],
+    Title = "عشوائي",
+    Code = [[mmmm200848]],
 })
 
 InfoTab:Code({
-    Title = "Code",
-    Code = [[]],
+    Title = "شرطي",
+    Code = [[ehheje7373]],
 })
 
 InfoTab:Code({
-    Title = "Code",
-    Code = [[]],
+    Title = "عشوائي",
+    Code = [[ben10k505]],
 })
 
 InfoTab:Code({
-    Title = "Code",
-    Code = [[]],
+    Title = "عشوائي",
+    Code = [[k11l96x]],
 })
 
 InfoTab:Code({
-    Title = "Code",
-    Code = [[]],
+    Title = "عشوائي",
+    Code = [[q_s6r]],
 })
 
 InfoTab:Code({
-    Title = "Code",
-    Code = [[]],
+    Title = "عشوائي",
+    Code = [[romarqas]],
+})
+
+InfoTab:Code({
+    Title = "عشوائي",
+    Code = [[echowithme]],
+})
+
+InfoTab:Code({
+    Title = "عشوائي",
+    Code = [[gangnyu]],
 })
