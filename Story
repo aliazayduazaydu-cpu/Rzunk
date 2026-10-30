@@ -331,3 +331,31 @@ Tab:Button({
         end
     end
 })
+
+Tab:Toggle({
+    Title = "ESP خزنه",
+    Desc = "إظهار موقع الخزنة",
+    Icon = "eye",
+    Type = "Checkbox",
+    Value = false,
+
+    Callback = function(state)
+        local Vault = workspace:FindFirstChild("Vault")
+
+        if not Vault then return end
+
+        if state then
+            local Highlight = Instance.new("Highlight")
+            Highlight.Name = "VaultESP"
+            Highlight.Adornee = Vault
+            Highlight.FillColor = Color3.fromRGB(255, 0, 0)
+            Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+            Highlight.Parent = Vault
+        else
+            local Highlight = Vault:FindFirstChild("VaultESP")
+            if Highlight then
+                Highlight:Destroy()
+            end
+        end
+    end
+})
