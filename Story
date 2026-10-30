@@ -359,3 +359,166 @@ Tab:Toggle({
         end
     end
 })
+
+--____________________________________________________
+--____________________________________________________
+--____________________________________________________
+--____________________________________________________
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local Player = Players.LocalPlayer
+
+-- VARIABLES
+local SpeedEnabled = false
+local JumpEnabled = false
+local NoclipEnabled = false
+local InfiniteJumpEnabled = false
+
+local SpeedValue = 50
+local JumpValue = 100
+
+local NoclipConnection
+
+local function GetHumanoid()
+    local Character = Player.Character
+    return Character and Character:FindFirstChildOfClass("Humanoid")
+end
+
+-- SPEED INPUT
+Tab:Input({
+    Title = "سرعة الحركة",
+    Placeholder = "اكتب السرعة",
+    Callback = function(Value)
+        SpeedValue = tonumber(Value) or 50
+
+        local Humanoid = GetHumanoid()
+        if SpeedEnabled and Humanoid then
+            Humanoid.WalkSpeed = SpeedValue
+        end
+    end
+})
+
+-- SPEED TOGGLE
+Tab:Toggle({
+    Title = "شغل سرعه",
+    Icon = "zap",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(state)
+        SpeedEnabled = state
+
+        local Humanoid = GetHumanoid()
+        if Humanoid then
+            Humanoid.WalkSpeed = state and SpeedValue or 16
+        end
+    end
+})
+
+-- JUMP INPUT
+Tab:Input({
+    Title = "قوة القفز",
+    Placeholder = "اكتب قوة القفز",
+    Callback = function(Value)
+        JumpValue = tonumber(Value) or 100
+
+        local Humanoid = GetHumanoid()
+        if JumpEnabled and Humanoid then
+            Humanoid.UseJumpPower = true
+            Humanoid.JumpPower = JumpValue
+        end
+    end
+})
+
+-- JUMP TOGGLE
+Tab:Toggle({
+    Title = "شغل قوه قفز",
+    Icon = "arrow-up",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(state)
+        JumpEnabled = state
+
+        local Humanoid = GetHumanoid()
+        if Humanoid then
+            Humanoid.UseJumpPower = true
+            Humanoid.JumpPower = state and JumpValue or 50
+        end
+    end
+})
+
+-- NOCLIP
+Tab:Toggle({
+    Title = "اخنراق جدران",
+    Icon = "ghost",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(state)
+        NoclipEnabled = state
+
+        if NoclipConnection then
+            NoclipConnection:Disconnect()
+            NoclipConnection = nil
+        end
+
+        if state then
+            NoclipConnection = RunService.Stepped:Connect(function()
+                local Character = Player.Character
+                if Character then
+                    for _, Part in ipairs(Character:GetDescendants()) do
+                        if Part:IsA("BasePart") then
+                            Part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        else
+            local Character = Player.Character
+            if Character then
+                for _, Part in ipairs(Character:GetDescendants()) do
+                    if Part:IsA("BasePart") then
+                        Part.CanCollide = true
+                    end
+                end
+            end
+        end
+    end
+})
+
+-- INFINITE JUMP
+Tab:Toggle({
+    Title = "قفز لا نهائي",
+    Icon = "chevrons-up",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(state)
+        InfiniteJumpEnabled = state
+    end
+})
+
+UserInputService.JumpRequest:Connect(function()
+    if InfiniteJumpEnabled then
+        local Humanoid = GetHumanoid()
+        if Humanoid then
+            Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+-- RESPAWN SUPPORT
+Player.CharacterAdded:Connect(function(Character)
+    local Humanoid = Character:WaitForChild("Humanoid")
+
+    task.wait(0.5)
+
+    if SpeedEnabled then
+        Humanoid.WalkSpeed = SpeedValue
+    end
+
+    if JumpEnabled then
+        Humanoid.UseJumpPower = true
+        Humanoid.JumpPower = JumpValue
+    end
+end)
