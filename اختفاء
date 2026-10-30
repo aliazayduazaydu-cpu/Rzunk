@@ -1,0 +1,512 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+
+local MAX_DISTANCE = 300
+local MAX_SPEED = 500
+local distance = 30
+local speed = 16
+local JUMP_HEIGHT = 4
+local JUMP_RECOVER = 12
+local FALL_SPEED = 60
+local ASCEND_SPEED = 40
+local MARKER_SIZE = Vector3.new(8, 0.5, 8)
+local STEP_HEIGHT = 15
+local COLUMN_SIZE = Vector3.new(MARKER_SIZE.X, 40, MARKER_SIZE.Z)
+local FRAME_SIZE = UDim2.new(0, 240, 0, 305)
+
+-- الحالات
+local floatOn = false
+local rising = false
+local teleportOn = false
+local baseY = 0
+local markerX, markerY, markerZ = 0, 0, 0
+local rootY, targetRootY = 0, 0
+local jumpOffset = 0
+
+local character, humanoid, root
+local marker = nil
+local savedCollide = {}
+local menuOpen = true
+
+local rayParams = RaycastParams.new()
+rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+local overlapParams = OverlapParams.new()
+overlapParams.FilterType = Enum.RaycastFilterType.Exclude
+
+-- ===== واجهة القائمة =====
+local gui = Instance.new("ScreenGui")
+gui.Name = "FloatMenu"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = FRAME_SIZE
+frame.Position = UDim2.new(0, 20, 0.5, -150)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2
+stroke.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 35)
+title.BackgroundTransparency = 1
+title.Text = "نزول وطفو"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
+
+local container = Instance.new("Frame")
+container.Size = UDim2.new(1, -20, 1, -45)
+container.Position = UDim2.new(0, 10, 0, 40)
+container.BackgroundTransparency = 1
+container.Parent = frame
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 8)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = container
+
+local floatBtn = Instance.new("TextButton")
+floatBtn.Size = UDim2.new(1, 0, 0, 36)
+floatBtn.LayoutOrder = 1
+floatBtn.Text = "نزول وطفو: OFF"
+floatBtn.TextColor3 = Color3.new(1, 1, 1)
+floatBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+floatBtn.Font = Enum.Font.GothamBold
+floatBtn.Parent = container
+Instance.new("UICorner", floatBtn).CornerRadius = UDim.new(0, 8)
+local floatStroke = Instance.new("UIStroke")
+floatStroke.Thickness = 1.5
+floatStroke.Parent = floatBtn
+
+local distBox = Instance.new("TextBox")
+distBox.Size = UDim2.new(1, 0, 0, 36)
+distBox.LayoutOrder = 2
+distBox.Text = tostring(distance)
+distBox.PlaceholderText = "المسافة (1-300)"
+distBox.TextColor3 = Color3.new(1, 1, 1)
+distBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+distBox.Parent = container
+Instance.new("UICorner", distBox).CornerRadius = UDim.new(0, 8)
+
+local speedBox = Instance.new("TextBox")
+speedBox.Size = UDim2.new(1, 0, 0, 36)
+speedBox.LayoutOrder = 3
+speedBox.Text = tostring(speed)
+speedBox.PlaceholderText = "السرعة (1-500)"
+speedBox.TextColor3 = Color3.new(1, 1, 1)
+speedBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+speedBox.Parent = container
+Instance.new("UICorner", speedBox).CornerRadius = UDim.new(0, 8)
+
+local statusLbl = Instance.new("TextLabel")
+statusLbl.Size = UDim2.new(1, 0, 0, 30)
+statusLbl.LayoutOrder = 4
+statusLbl.BackgroundTransparency = 1
+statusLbl.TextColor3 = Color3.new(1, 1, 1)
+statusLbl.TextScaled = true
+statusLbl.Font = Enum.Font.Gotham
+statusLbl.Text = "الحالة: على السطح"
+statusLbl.Parent = container
+
+local teleportBtn = Instance.new("TextButton")
+teleportBtn.Size = UDim2.new(1, 0, 0, 36)
+teleportBtn.LayoutOrder = 5
+teleportBtn.Text = "أداة الانتقال: OFF"
+teleportBtn.TextColor3 = Color3.new(1, 1, 1)
+teleportBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 140)
+teleportBtn.Font = Enum.Font.GothamBold
+teleportBtn.Parent = container
+Instance.new("UICorner", teleportBtn).CornerRadius = UDim.new(0, 8)
+local teleportStroke = Instance.new("UIStroke")
+teleportStroke.Thickness = 1.5
+teleportStroke.Parent = teleportBtn
+
+-- ===== زر فتح/إغلاق القائمة =====
+local toggleGui = Instance.new("ScreenGui")
+toggleGui.Name = "MenuToggleGui"
+toggleGui.ResetOnSpawn = false
+toggleGui.Parent = player:WaitForChild("PlayerGui")
+
+local toggleMenuBtn = Instance.new("ImageButton")
+toggleMenuBtn.Size = UDim2.new(0, 40, 0, 40)
+toggleMenuBtn.AnchorPoint = Vector2.new(0.5, 0)
+toggleMenuBtn.Position = UDim2.new(0.5, 0, 0, 8)
+toggleMenuBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+toggleMenuBtn.Image = "rbxassetid://11028318025"
+toggleMenuBtn.Parent = toggleGui
+Instance.new("UICorner", toggleMenuBtn).CornerRadius = UDim.new(1, 0)
+local toggleStroke = Instance.new("UIStroke")
+toggleStroke.Thickness = 2
+toggleStroke.Parent = toggleMenuBtn
+
+-- ===== تأثيرات =====
+local function tween(obj, time, props, style, dir)
+	local t = TweenService:Create(obj, TweenInfo.new(time, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out), props)
+	t:Play()
+	return t
+end
+
+local function toggleMenu()
+	menuOpen = not menuOpen
+	if menuOpen then
+		frame.Visible = true
+		frame.Size = UDim2.new(0, 0, 0, 0)
+		tween(frame, 0.35, {Size = FRAME_SIZE}, Enum.EasingStyle.Back)
+	else
+		local t = tween(frame, 0.25, {Size = UDim2.new(0, 0, 0, 0)}, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+		t.Completed:Connect(function()
+			if not menuOpen then frame.Visible = false end
+		end)
+	end
+end
+
+toggleMenuBtn.MouseButton1Click:Connect(toggleMenu)
+
+local function addHover(btn)
+	btn.MouseEnter:Connect(function()
+		tween(btn, 0.15, {Size = UDim2.new(1, 4, 0, 38)})
+	end)
+	btn.MouseLeave:Connect(function()
+		tween(btn, 0.15, {Size = UDim2.new(1, 0, 0, 36)})
+	end)
+end
+addHover(floatBtn)
+addHover(teleportBtn)
+
+RunService.Heartbeat:Connect(function()
+	local c = Color3.fromHSV((tick() * 0.25) % 1, 1, 1)
+	stroke.Color = c
+	toggleStroke.Color = c
+	floatStroke.Color = c
+	teleportStroke.Color = c
+	title.TextColor3 = c
+end)
+
+-- ===== دوال مساعدة =====
+local function setBtn(on)
+	floatBtn.Text = "نزول وطفو: " .. (on and "ON" or "OFF")
+	floatBtn.BackgroundColor3 = on and Color3.fromRGB(0, 140, 70) or Color3.fromRGB(50, 50, 50)
+end
+
+local function setTeleportBtn(on)
+	teleportBtn.Text = "أداة الانتقال: " .. (on and "ON" or "OFF")
+	teleportBtn.BackgroundColor3 = on and Color3.fromRGB(140, 70, 140) or Color3.fromRGB(70, 70, 140)
+end
+
+local function refreshStatus()
+	if floatOn then
+		statusLbl.Text = "طافي - المسافة: " .. distance .. " | السرعة: " .. speed
+	elseif rising then
+		statusLbl.Text = "جاري الصعود..."
+	else
+		statusLbl.Text = "الحالة: على السطح"
+	end
+end
+
+local function createMarker()
+	if marker then marker:Destroy() end
+	marker = Instance.new("Part")
+	marker.Name = "PositionMarker"
+	marker.Anchored = true
+	marker.CanCollide = false
+	marker.CanQuery = false
+	marker.CanTouch = false
+	marker.Material = Enum.Material.Neon
+	marker.Color = Color3.fromRGB(255, 0, 0)
+	marker.Transparency = 0
+	marker.Size = MARKER_SIZE
+	marker.CFrame = CFrame.new(markerX, markerY, markerZ)
+	marker.Parent = workspace
+	rayParams.FilterDescendantsInstances = {character, marker}
+	overlapParams.FilterDescendantsInstances = {character, marker}
+end
+
+local function removeMarker()
+	if marker then
+		marker:Destroy()
+		marker = nil
+	end
+end
+
+local function disableCollide()
+	if not character then return end
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("BasePart") then
+			if savedCollide[part] == nil then
+				savedCollide[part] = part.CanCollide
+			end
+			part.CanCollide = false
+		end
+	end
+end
+
+local function restoreCollide()
+	for part, original in pairs(savedCollide) do
+		if part and part.Parent then
+			part.CanCollide = original
+		end
+	end
+	savedCollide = {}
+end
+
+local function setCameraFree(on)
+	local cam = workspace.CurrentCamera
+	cam.CameraType = Enum.CameraType.Custom
+	if on and marker then
+		cam.CameraSubject = marker
+	elseif humanoid then
+		cam.CameraSubject = humanoid
+	end
+end
+
+-- أرض المربع: أعلى سطح تحته مباشرة
+local function probeTop(x, z)
+	local result = workspace:Blockcast(
+		CFrame.new(x, markerY + 1, z),
+		MARKER_SIZE,
+		Vector3.new(0, -600, 0),
+		rayParams
+	)
+	if result then
+		return result.Position.Y
+	end
+	return -math.huge
+end
+
+-- أعلى نقطة لأي جزء داخل العمود أمام المربع
+local function blockingTop(x, z)
+	local parts = workspace:GetPartBoundsInBox(
+		CFrame.new(x, markerY + 20.5, z),
+		COLUMN_SIZE,
+		overlapParams
+	)
+	local highest = nil
+	for _, p in ipairs(parts) do
+		if p.CanCollide then
+			local t = p.Position.Y + p.Size.Y / 2
+			if not highest or t > highest then
+				highest = t
+			end
+		end
+	end
+	return highest
+end
+
+-- الحركة: يتوقف عند الجدران الطويلة، ويصعد على القصيرة
+local function tryMove(delta)
+	local nx = markerX + delta.X
+	local nz = markerZ + delta.Z
+
+	local top = blockingTop(nx, nz)
+
+	if not top or top <= markerY + 0.5 then
+		markerX, markerZ = nx, nz
+		return
+	end
+
+	if top - markerY <= STEP_HEIGHT then
+		markerX, markerZ = nx, nz
+		markerY = top + MARKER_SIZE.Y / 2
+	end
+end
+
+-- أداة الانتقال: ينتقل المربع مباشرة إلى النقطة التي تضغط عليها
+local function teleportTo(screenX, screenY)
+	if not floatOn or not marker then return end
+
+	local cam = workspace.CurrentCamera
+	local ray = cam:ViewportPointToRay(screenX, screenY)
+	local hit = workspace:Raycast(ray.Origin, ray.Direction * 2000, rayParams)
+	if not hit then return end
+
+	markerX = hit.Position.X
+	markerZ = hit.Position.Z
+	markerY = hit.Position.Y + MARKER_SIZE.Y / 2
+	jumpOffset = 0
+end
+
+-- ===== بدء وإيقاف الطفو =====
+local function startFloat()
+	if floatOn or rising or not root or not humanoid then return end
+
+	local torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+	local spawnPos = torso and torso.Position or root.Position
+
+	baseY = root.Position.Y
+	markerX, markerY, markerZ = spawnPos.X, baseY, spawnPos.Z
+	jumpOffset = 0
+	floatOn = true
+
+	humanoid.PlatformStand = true
+	disableCollide()
+	createMarker()
+
+	local cf = root.CFrame
+	root.CFrame = CFrame.new(markerX, markerY - distance, markerZ) * (cf - cf.Position)
+	root.AssemblyLinearVelocity = Vector3.zero
+	root.AssemblyAngularVelocity = Vector3.zero
+
+	setCameraFree(true)
+	setBtn(true)
+	refreshStatus()
+end
+
+local function stopFloat()
+	if not floatOn then return end
+	floatOn = false
+	rising = true
+	jumpOffset = 0
+	rootY = root.Position.Y
+	targetRootY = math.max(baseY, probeTop(markerX, markerZ) + 3)
+	setBtn(false)
+	refreshStatus()
+end
+
+local function finishRise()
+	rising = false
+	jumpOffset = 0
+	restoreCollide()
+	if humanoid then
+		humanoid.PlatformStand = false
+		humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+	end
+	removeMarker()
+	setCameraFree(false)
+	refreshStatus()
+end
+
+-- ===== أحداث الواجهة =====
+floatBtn.MouseButton1Click:Connect(function()
+	if floatOn then
+		stopFloat()
+	else
+		startFloat()
+	end
+end)
+
+teleportBtn.MouseButton1Click:Connect(function()
+	teleportOn = not teleportOn
+	setTeleportBtn(teleportOn)
+end)
+
+distBox.FocusLost:Connect(function()
+	local value = tonumber(distBox.Text)
+	if not value then
+		distBox.Text = tostring(distance)
+		return
+	end
+	distance = math.clamp(math.floor(math.abs(value)), 1, MAX_DISTANCE)
+	distBox.Text = tostring(distance)
+	refreshStatus()
+end)
+
+speedBox.FocusLost:Connect(function()
+	local value = tonumber(speedBox.Text)
+	if not value then
+		speedBox.Text = tostring(speed)
+		return
+	end
+	speed = math.clamp(math.floor(math.abs(value)), 1, MAX_SPEED)
+	speedBox.Text = tostring(speed)
+	refreshStatus()
+end)
+
+-- الضغط على الشاشة أثناء أداة الانتقال
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed or not teleportOn then return end
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		teleportTo(input.Position.X, input.Position.Y)
+	end
+end)
+
+UserInputService.JumpRequest:Connect(function()
+	if floatOn then
+		jumpOffset = JUMP_HEIGHT
+	end
+end)
+
+RunService.Stepped:Connect(function()
+	if floatOn or rising then
+		disableCollide()
+	end
+end)
+
+-- ===== التحديث كل فريم =====
+RunService.RenderStepped:Connect(function(dt)
+	if not character or not root or not humanoid then return end
+	if not (floatOn or rising) then return end
+
+	local cf = root.CFrame
+	local rot = cf - cf.Position
+
+	if floatOn then
+		local delta = humanoid.MoveDirection * speed * dt
+		if delta.Magnitude > 0 then
+			tryMove(delta)
+		end
+
+		local top = probeTop(markerX, markerZ)
+		local target = math.max(baseY, top)
+		if target > markerY then
+			markerY = target
+		else
+			markerY = math.max(target, markerY - FALL_SPEED * dt)
+		end
+
+		jumpOffset = math.max(0, jumpOffset - JUMP_RECOVER * dt)
+
+		local markerDrawY = markerY + jumpOffset
+		root.CFrame = CFrame.new(markerX, markerDrawY - distance, markerZ) * rot
+		root.AssemblyLinearVelocity = Vector3.zero
+		root.AssemblyAngularVelocity = Vector3.zero
+
+		if marker then
+			marker.CFrame = CFrame.new(markerX, markerDrawY, markerZ)
+		end
+
+	elseif rising then
+		targetRootY = math.max(baseY, probeTop(markerX, markerZ) + 3)
+		rootY = math.min(rootY + ASCEND_SPEED * dt, targetRootY)
+		root.CFrame = CFrame.new(markerX, rootY, markerZ) * rot
+		root.AssemblyLinearVelocity = Vector3.zero
+		root.AssemblyAngularVelocity = Vector3.zero
+
+		if rootY >= targetRootY then
+			finishRise()
+		end
+	end
+end)
+
+-- ===== عند الموت أو الظهور من جديد =====
+local function onCharacterAdded(char)
+	character = char
+	humanoid = char:WaitForChild("Humanoid")
+	root = char:WaitForChild("HumanoidRootPart")
+
+	savedCollide = {}
+	floatOn = false
+	rising = false
+	jumpOffset = 0
+	removeMarker()
+	setCameraFree(false)
+	setBtn(false)
+	refreshStatus()
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
+if player.Character then
+	task.spawn(onCharacterAdded, player.Character)
+end
