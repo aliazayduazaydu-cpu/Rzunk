@@ -58,7 +58,7 @@ local Code = Tab:Code({
 })
 local Code = Tab:Code({
     Title = "Code",
-    Code = [[سكربت لماب escape chesse]]
+    Code = [[سكربت لماب story 1]]
 })
 
 --____________________________________________________
