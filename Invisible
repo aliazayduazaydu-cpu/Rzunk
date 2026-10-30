@@ -633,3 +633,104 @@ if FloatPlayer.Character then
         FloatPlayer.Character
     )
 end
+
+-- ================== Copy Tools ==================
+local selectedName = nil
+
+local function copyToolsFrom(targetPlayer)
+    local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+    if not backpack or not targetPlayer then return 0 end
+
+    local count = 0
+    local sources = {}
+    if targetPlayer:FindFirstChildOfClass("Backpack") then
+        table.insert(sources, targetPlayer:FindFirstChildOfClass("Backpack"))
+    end
+    if targetPlayer.Character then
+        table.insert(sources, targetPlayer.Character)
+    end
+
+    for _, source in ipairs(sources) do
+        for _, item in ipairs(source:GetChildren()) do
+            if item:IsA("Tool") then
+                item:Clone().Parent = backpack
+                count += 1
+            end
+        end
+    end
+    return count
+end
+
+local function getPlayerNames()
+    local names = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            table.insert(names, p.Name)
+        end
+    end
+    return names
+end
+
+local CopyTab = Window:Tab({
+    Title = "Copy Tools",
+    Icon = "copy",
+    Locked = false,
+})
+
+CopyTab:Button({
+    Title = "Copy All Tools",
+    Desc = "نسخ أدوات جميع اللاعبين إلى حقيبتك",
+    Callback = function()
+        local total = 0
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer then
+                total += copyToolsFrom(p)
+            end
+        end
+        WindUI:Notify({
+            Title = "Copy All Tools",
+            Content = "تم نسخ " .. total .. " أداة",
+            Duration = 3,
+        })
+    end,
+})
+
+local PlayerDropdown = CopyTab:Dropdown({
+    Title = "Select Player",
+    Desc = "اختر لاعب لنسخ أدواته",
+    Values = getPlayerNames(),
+    Value = nil,
+    Callback = function(value)
+        selectedName = value
+    end,
+})
+
+CopyTab:Button({
+    Title = "Refresh Players",
+    Desc = "تحديث قائمة اللاعبين",
+    Callback = function()
+        PlayerDropdown:Refresh(getPlayerNames())
+    end,
+})
+
+CopyTab:Button({
+    Title = "Copy Player Tools",
+    Desc = "نسخ أدوات اللاعب المختار فقط",
+    Callback = function()
+        if not selectedName then
+            WindUI:Notify({ Title = "خطأ", Content = "اختر لاعب أولاً", Duration = 3 })
+            return
+        end
+        local target = Players:FindFirstChild(selectedName)
+        if not target then
+            WindUI:Notify({ Title = "خطأ", Content = "اللاعب غير موجود", Duration = 3 })
+            return
+        end
+        local count = copyToolsFrom(target)
+        WindUI:Notify({
+            Title = "Copy Player Tools",
+            Content = "تم نسخ " .. count .. " أداة من " .. selectedName,
+            Duration = 3,
+        })
+    end,
+})
