@@ -211,22 +211,6 @@ local Tab = Window:Tab({
     Locked = false,
 })
 
-local Toggle = Tab:Toggle({
-    Title = "Toggle",
-    Desc = "Toggle Description",
-    Icon = "zap",
-    Type = "Checkbox",
-    Value = false, -- default value
-    Callback = function(state) 
-        print("Toggle Activated" .. tostring(state))
-    end
-})
---part
---workspace.Neighbours.Crazy[""]
-
-
-
---workspace.BadGuys[" "]
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -323,3 +307,27 @@ Players.PlayerAdded:Connect(function(Player)
         end
     end)
 end)
+
+--____________________________________________________
+--____________________________________________________
+
+local Tab = Window:Tab({
+    Title = "قائمة اشياء جانبيه",
+    Icon = "zap", -- optional
+    Locked = false,
+})
+
+Tab:Button({
+    Title = "جلب كود خزنه",
+    Desc = "يطيك كود",
+    Icon = "move",
+    Callback = function()
+        local Part = workspace:FindFirstChild("CodeNote")
+        local Character = game:GetService("Players").LocalPlayer.Character
+        local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+
+        if Part and Root and Part:IsA("BasePart") then
+            Part.CFrame = Root.CFrame * CFrame.new(0, 0, -3)
+        end
+    end
+})
