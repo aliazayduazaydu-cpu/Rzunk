@@ -1061,17 +1061,11 @@ end
 --==================================================
 
 local FloatTab = Window:Tab({
-    Title = "اختفاء",
+    Title = "قائمة اختفاء",
     Icon = "cloud",
     Locked = false,
 })
 
--- قسم الطفو
-FloatTab:Section({
-    Title = "نظام الطفو",
-    Box = true,
-    Opened = true,
-})
 
 floatToggle = FloatTab:Toggle({
     Title = "اختفء",
