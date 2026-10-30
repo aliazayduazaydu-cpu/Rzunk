@@ -341,8 +341,8 @@ InfoTab:Code({
 
 -- ---------- تبويب الميزات ----------
 local MainTab = Window:Tab({
-    Title = "الميزات",
-    Icon = "bird",
+    Title = "قدرات",
+    Icon = "wrench",
     Locked = false,
 })
 
