@@ -1,0 +1,635 @@
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+
+-- ================== الثيم ==================
+local themeName = "Purple"
+local ok = pcall(function()
+    WindUI:AddTheme({
+        Name = "Purple",
+        Accent = Color3.fromHex("#8B5CF6"),
+        Dialog = Color3.fromHex("#1E1433"),
+        Outline = Color3.fromHex("#A78BFA"),
+        Text = Color3.fromHex("#F5F3FF"),
+        Placeholder = Color3.fromHex("#C4B5FD"),
+        Background = Color3.fromHex("#140D26"),
+        Button = Color3.fromHex("#5B21B6"),
+        Icon = Color3.fromHex("#C4B5FD"),
+    })
+end)
+if not ok then
+    themeName = "Dark"
+end
+local Window = WindUI:CreateWindow({
+    Title = "سكربت ali",
+    Icon = "door-open",
+    Author = "by .مطور علاوي",
+    Folder = "ali_script",
+    Size = UDim2.fromOffset(580, 460),
+    MinSize = Vector2.new(560, 350),
+    MaxSize = Vector2.new(850, 560),
+    ToggleKey = Enum.KeyCode.RightShift,
+    Transparent = true,
+    Theme = themeName,
+    Resizable = true,
+    SideBarWidth = 200,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+    BackgroundImageTransparency = 0.42,
+})
+
+-- ---------- قائمة رائيسيه (أول تبويب) ----------
+local InfoTab = Window:Tab({
+    Title = "قائمة رائيسيه",
+    Icon = "bird",
+    Locked = false,
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[حسابي في روبلوكس hdjjlawe]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[حسابي في يوتيوب : مطور علاوي]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[سكربت لماب عراق هوب]],
+})
+--==================================================
+-- FLOAT SYSTEM - ALI
+--==================================================
+
+local FloatPlayer = Players.LocalPlayer
+local FloatRunService = RunService
+
+local MAX_DISTANCE = 300
+local MAX_SPEED = 500
+
+local distance = 30
+local speed = 16
+
+local JUMP_HEIGHT = 4
+local JUMP_RECOVER = 12
+local FALL_SPEED = 60
+local ASCEND_SPEED = 40
+
+local MARKER_SIZE = Vector3.new(8, 0.5, 8)
+local STEP_HEIGHT = 15
+local COLUMN_SIZE = Vector3.new(8, 40, 8)
+
+local floatOn = false
+local rising = false
+local teleportOn = false
+
+local baseY = 0
+local markerX, markerY, markerZ = 0, 0, 0
+local rootY, targetRootY = 0, 0
+local jumpOffset = 0
+
+local character, humanoid, root
+local marker = nil
+local savedCollide = {}
+
+local floatToggle
+local teleportToggle
+local statusParagraph
+local updatingUI = false
+
+local rayParams = RaycastParams.new()
+rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+local overlapParams = OverlapParams.new()
+overlapParams.FilterType = Enum.RaycastFilterType.Exclude
+
+--==================================================
+-- واجهة الطفو
+--==================================================
+
+local function setFloatButton(on)
+    if not floatToggle then return end
+
+    updatingUI = true
+    floatToggle:Set(on)
+    updatingUI = false
+end
+
+local function setTeleportButton(on)
+    if not teleportToggle then return end
+
+    updatingUI = true
+    teleportToggle:Set(on)
+    updatingUI = false
+end
+
+local function refreshFloatStatus()
+    if not statusParagraph then return end
+
+    if floatOn then
+        statusParagraph:SetDesc(
+            "طافي | المسافة: " .. distance ..
+            " | السرعة: " .. speed
+        )
+    elseif rising then
+        statusParagraph:SetDesc("جاري الصعود...")
+    else
+        statusParagraph:SetDesc("الحالة: على السطح")
+    end
+end
+
+--==================================================
+-- المربع
+--==================================================
+
+local function createMarker()
+    if marker then marker:Destroy() end
+
+    marker = Instance.new("Part")
+    marker.Name = "AliFloatMarker"
+    marker.Anchored = true
+    marker.CanCollide = false
+    marker.CanQuery = false
+    marker.CanTouch = false
+    marker.Material = Enum.Material.Neon
+    marker.Color = Color3.fromRGB(255, 0, 0)
+    marker.Transparency = 0
+    marker.Size = MARKER_SIZE
+    marker.CFrame = CFrame.new(markerX, markerY, markerZ)
+    marker.Parent = workspace
+
+    rayParams.FilterDescendantsInstances = {character, marker}
+    overlapParams.FilterDescendantsInstances = {character, marker}
+end
+
+local function removeMarker()
+    if marker then
+        marker:Destroy()
+        marker = nil
+    end
+end
+
+--==================================================
+-- التصادم
+--==================================================
+
+local function disableFloatCollide()
+    if not character then return end
+
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            if savedCollide[part] == nil then
+                savedCollide[part] = part.CanCollide
+            end
+
+            part.CanCollide = false
+        end
+    end
+end
+
+local function restoreFloatCollide()
+    for part, original in pairs(savedCollide) do
+        if part and part.Parent then
+            part.CanCollide = original
+        end
+    end
+
+    savedCollide = {}
+end
+
+local function setFloatCamera(on)
+    local cam = workspace.CurrentCamera
+    if not cam then return end
+
+    cam.CameraType = Enum.CameraType.Custom
+
+    if on and marker then
+        cam.CameraSubject = marker
+    elseif humanoid then
+        cam.CameraSubject = humanoid
+    end
+end
+
+--==================================================
+-- اكتشاف الأرض
+--==================================================
+
+local function probeTop(x, z)
+    local result = workspace:Blockcast(
+        CFrame.new(x, markerY + 1, z),
+        MARKER_SIZE,
+        Vector3.new(0, -600, 0),
+        rayParams
+    )
+
+    if result then
+        return result.Position.Y
+    end
+
+    return -math.huge
+end
+
+local function blockingTop(x, z)
+    local parts = workspace:GetPartBoundsInBox(
+        CFrame.new(x, markerY + 20.5, z),
+        COLUMN_SIZE,
+        overlapParams
+    )
+
+    local highest = nil
+
+    for _, p in ipairs(parts) do
+        if p.CanCollide then
+            local top = p.Position.Y + p.Size.Y / 2
+
+            if not highest or top > highest then
+                highest = top
+            end
+        end
+    end
+
+    return highest
+end
+
+--==================================================
+-- حركة المربع
+--==================================================
+
+local function tryMove(delta)
+    local nx = markerX + delta.X
+    local nz = markerZ + delta.Z
+
+    local top = blockingTop(nx, nz)
+
+    if not top or top <= markerY + 0.5 then
+        markerX, markerZ = nx, nz
+        return
+    end
+
+    if top - markerY <= STEP_HEIGHT then
+        markerX, markerZ = nx, nz
+        markerY = top + MARKER_SIZE.Y / 2
+    end
+end
+
+--==================================================
+-- الانتقال إلى المكان المحدد
+--==================================================
+
+local function floatTeleportTo(screenX, screenY)
+    if not floatOn or not marker then return end
+
+    local cam = workspace.CurrentCamera
+    local ray = cam:ViewportPointToRay(screenX, screenY)
+
+    local hit = workspace:Raycast(
+        ray.Origin,
+        ray.Direction * 2000,
+        rayParams
+    )
+
+    if not hit then return end
+
+    markerX = hit.Position.X
+    markerZ = hit.Position.Z
+    markerY = hit.Position.Y + MARKER_SIZE.Y / 2
+
+    jumpOffset = 0
+end
+
+--==================================================
+-- تشغيل الطفو
+--==================================================
+
+local function startFloat()
+    if floatOn or rising or not root or not humanoid then
+        return
+    end
+
+    local torso =
+        character:FindFirstChild("UpperTorso")
+        or character:FindFirstChild("Torso")
+
+    local spawnPos = torso and torso.Position or root.Position
+
+    baseY = root.Position.Y
+
+    markerX, markerY, markerZ =
+        spawnPos.X, baseY, spawnPos.Z
+
+    jumpOffset = 0
+    floatOn = true
+
+    humanoid.PlatformStand = true
+
+    disableFloatCollide()
+    createMarker()
+
+    local cf = root.CFrame
+
+    root.CFrame =
+        CFrame.new(markerX, markerY - distance, markerZ)
+        * (cf - cf.Position)
+
+    root.AssemblyLinearVelocity = Vector3.zero
+    root.AssemblyAngularVelocity = Vector3.zero
+
+    setFloatCamera(true)
+    setFloatButton(true)
+    refreshFloatStatus()
+end
+
+--==================================================
+-- إيقاف الطفو
+--==================================================
+
+local function stopFloat()
+    if not floatOn then return end
+
+    floatOn = false
+    rising = true
+    jumpOffset = 0
+
+    rootY = root.Position.Y
+
+    targetRootY = math.max(
+        baseY,
+        probeTop(markerX, markerZ) + 3
+    )
+
+    setFloatButton(false)
+    refreshFloatStatus()
+end
+
+--==================================================
+-- إنهاء الصعود
+--==================================================
+
+local function finishRise()
+    rising = false
+    jumpOffset = 0
+
+    restoreFloatCollide()
+
+    if humanoid then
+        humanoid.PlatformStand = false
+        humanoid:ChangeState(
+            Enum.HumanoidStateType.GettingUp
+        )
+    end
+
+    removeMarker()
+    setFloatCamera(false)
+    refreshFloatStatus()
+end
+
+--==================================================
+-- لمس الشاشة للانتقال
+--==================================================
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed or not teleportOn then return end
+
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        floatTeleportTo(
+            input.Position.X,
+            input.Position.Y
+        )
+    end
+end)
+
+--==================================================
+-- القفز أثناء الطفو
+--==================================================
+
+UserInputService.JumpRequest:Connect(function()
+    if floatOn then
+        jumpOffset = JUMP_HEIGHT
+    end
+end)
+
+--==================================================
+-- تعطيل التصادم أثناء الطفو
+--==================================================
+
+FloatRunService.Stepped:Connect(function()
+    if floatOn or rising then
+        disableFloatCollide()
+    end
+end)
+
+--==================================================
+-- تحديث الحركة
+--==================================================
+
+FloatRunService.RenderStepped:Connect(function(dt)
+    if not character or not root or not humanoid then
+        return
+    end
+
+    if not (floatOn or rising) then
+        return
+    end
+
+    local cf = root.CFrame
+    local rot = cf - cf.Position
+
+    if floatOn then
+
+        local delta = humanoid.MoveDirection * speed * dt
+
+        if delta.Magnitude > 0 then
+            tryMove(delta)
+        end
+
+        local top = probeTop(markerX, markerZ)
+        local target = math.max(baseY, top)
+
+        if target > markerY then
+            markerY = target
+        else
+            markerY = math.max(
+                target,
+                markerY - FALL_SPEED * dt
+            )
+        end
+
+        jumpOffset = math.max(
+            0,
+            jumpOffset - JUMP_RECOVER * dt
+        )
+
+        local markerDrawY = markerY + jumpOffset
+
+        root.CFrame =
+            CFrame.new(
+                markerX,
+                markerDrawY - distance,
+                markerZ
+            ) * rot
+
+        root.AssemblyLinearVelocity = Vector3.zero
+        root.AssemblyAngularVelocity = Vector3.zero
+
+        if marker then
+            marker.CFrame = CFrame.new(
+                markerX,
+                markerDrawY,
+                markerZ
+            )
+        end
+
+    elseif rising then
+
+        targetRootY = math.max(
+            baseY,
+            probeTop(markerX, markerZ) + 3
+        )
+
+        rootY = math.min(
+            rootY + ASCEND_SPEED * dt,
+            targetRootY
+        )
+
+        root.CFrame = CFrame.new(
+            markerX,
+            rootY,
+            markerZ
+        ) * rot
+
+        root.AssemblyLinearVelocity = Vector3.zero
+        root.AssemblyAngularVelocity = Vector3.zero
+
+        if rootY >= targetRootY then
+            finishRise()
+        end
+    end
+end)
+
+--==================================================
+-- إعادة ضبط الطفو عند ظهور الشخصية
+--==================================================
+
+local function onFloatCharacterAdded(char)
+    character = char
+
+    humanoid = char:WaitForChild("Humanoid")
+    root = char:WaitForChild("HumanoidRootPart")
+
+    savedCollide = {}
+
+    floatOn = false
+    rising = false
+    jumpOffset = 0
+    teleportOn = false
+
+    removeMarker()
+    setFloatCamera(false)
+    setFloatButton(false)
+    setTeleportButton(false)
+    refreshFloatStatus()
+end
+--__________________________________________________________________
+--__________________________________________________________________
+
+--==================================================
+-- FLOAT SYSTEM TAB
+--==================================================
+
+local FloatTab = Window:Tab({
+    Title = "قائمة اختفاء",
+    Icon = "cloud",
+    Locked = false,
+})
+
+
+floatToggle = FloatTab:Toggle({
+    Title = "اختفء",
+    Desc = "تشغيل وإيقاف اختفاء",
+    Default = false,
+
+    Callback = function(state)
+        if updatingUI then return end
+
+        if state then
+            startFloat()
+        else
+            stopFloat()
+        end
+    end
+})
+
+-- المسافة
+FloatTab:Input({
+    Title = "مسافه عمق نزول اختفاء",
+    Desc = "المسافة بين اللاعب والمربع (1-300)",
+    Placeholder = "30",
+
+    Callback = function(value)
+        local number = tonumber(value)
+        if not number then return end
+
+        distance = math.clamp(
+            math.floor(math.abs(number)),
+            1,
+            MAX_DISTANCE
+        )
+
+        refreshFloatStatus()
+    end
+})
+
+-- السرعة
+FloatTab:Input({
+    Title = "سرعه مشي مربع",
+    Desc = "سرعة حركة المربع (1-500)",
+    Placeholder = "16",
+
+    Callback = function(value)
+        local number = tonumber(value)
+        if not number then return end
+
+        speed = math.clamp(
+            math.floor(math.abs(number)),
+            1,
+            MAX_SPEED
+        )
+
+        refreshFloatStatus()
+    end
+})
+
+
+
+teleportToggle = FloatTab:Toggle({
+    Title = "أداة الانتقال لمربع",
+    Desc = "فعّلها ثم اضغط على المكان لنقل المربع إليه",
+    Default = false,
+
+    Callback = function(state)
+        if updatingUI then return end
+
+        teleportOn = state
+    end
+})
+
+--==================================================
+-- CHARACTER
+--==================================================
+
+FloatPlayer.CharacterAdded:Connect(onFloatCharacterAdded)
+
+if FloatPlayer.Character then
+    task.spawn(
+        onFloatCharacterAdded,
+        FloatPlayer.Character
+    )
+end
