@@ -464,3 +464,104 @@ PlayersTab:Toggle({
         if v then teleportToSelected() end
     end,
 })
+-- ================== سكنات ==================
+local InfoTab = Window:Tab({
+    Title = "قائمة سكنات",
+    Icon = "code",
+    Locked = false,
+})
+
+InfoTab:Code({
+    Title = "طفل",
+    Code = [[ehhehe7373]],
+})
+
+InfoTab:Code({
+    Title = "طفل",
+    Code = [[m1234med]],
+})
+
+InfoTab:Code({
+    Title = "بنت",
+    Code = [[me70036]],
+})
+
+InfoTab:Code({
+    Title = "ام طيز",
+    Code = [[angie_pro02]],
+})
+
+InfoTab:Code({
+    Title = "عشوائي",
+    Code = [[sr_potato77777777777]],
+})
+
+InfoTab:Code({
+    Title = "جبس",
+    Code = [[diva_np1]],
+})
+
+InfoTab:Code({
+    Title = "عشوائي",
+    Code = [[ABN_KRBALA]],
+})
+
+InfoTab:Code({
+    Title = "اسود",
+    Code = [[pf_er1]],
+})
+
+InfoTab:Code({
+    Title = "ايمو",
+    Code = [[6zl81]],
+})
+
+InfoTab:Code({
+    Title = "ابن سكونا",
+    Code = [[DARVENYER]],
+})
+
+InfoTab:Code({
+    Title = "الي يصلي",
+    Code = [[]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[]],
+})
