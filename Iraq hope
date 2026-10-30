@@ -595,7 +595,7 @@ local speed = 16
 local JUMP_HEIGHT = 4
 local JUMP_RECOVER = 12
 local FALL_SPEED = 60
-local ASCEND_SPEED = 40
+local ASCEND_SPEED = 4000
 
 local MARKER_SIZE = Vector3.new(8, 0.5, 8)
 local STEP_HEIGHT = 15
