@@ -1,0 +1,465 @@
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+
+-- ================== الثيم ==================
+local themeName = "Purple"
+local ok = pcall(function()
+    WindUI:AddTheme({
+        Name = "Purple",
+        Accent = Color3.fromHex("#8B5CF6"),
+        Dialog = Color3.fromHex("#1E1433"),
+        Outline = Color3.fromHex("#A78BFA"),
+        Text = Color3.fromHex("#F5F3FF"),
+        Placeholder = Color3.fromHex("#C4B5FD"),
+        Background = Color3.fromHex("#140D26"),
+        Button = Color3.fromHex("#5B21B6"),
+        Icon = Color3.fromHex("#C4B5FD"),
+    })
+end)
+if not ok then
+    themeName = "Dark"
+end
+--__________________________________________________________________
+--__________________________________________________________________
+local InfoTab = Window:Tab({
+    Title = "قائمة رائيسيه",
+    Icon = "bird",
+    Locked = false,
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[حسابي في روبلوكس hdjjlawe]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[حسابي في يوتيوب : مطور علاوي]],
+})
+InfoTab:Code({
+    Title = "Code",
+    Code = [[سكربت لماب عراق هوب]],
+})
+-- ================== المتغيرات ==================
+local State = {
+    ESPAll = false,
+    ESPSelected = false,
+    View = false,
+    Speed = 16,
+    SpeedOn = false,
+    JumpPower = 50,
+    JumpOn = false,
+    Noclip = false,
+    InfJump = false,
+    ZeroG = false,
+    ZeroGSpeed = 60,
+    SelectedPlayer = nil,
+}
+
+local RED = Color3.fromRGB(255, 0, 0)
+local ESPObjects = {}
+local ZeroGForce, ZeroGAtt
+local ZeroGVel = Vector3.zero
+local touchInput = nil
+local touchPos = nil
+local touching = false
+
+-- ================== دوال مساعدة ==================
+local function getChar()
+    return LocalPlayer.Character
+end
+
+local function getHum()
+    local c = getChar()
+    return c and c:FindFirstChildOfClass("Humanoid")
+end
+
+local function getRoot()
+    local c = getChar()
+    return c and c:FindFirstChild("HumanoidRootPart")
+end
+
+local function getPlayerList()
+    local list = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            table.insert(list, p.Name)
+        end
+    end
+    return list
+end
+
+local function getSelected()
+    return State.SelectedPlayer and Players:FindFirstChild(State.SelectedPlayer)
+end
+
+-- ================== ESP (توهج أحمر + اسم) ==================
+local function clearESP(player)
+    local objs = ESPObjects[player]
+    if objs then
+        for _, o in ipairs(objs) do
+            if o then o:Destroy() end
+        end
+    end
+    ESPObjects[player] = nil
+end
+
+local function shouldESP(player)
+    if State.ESPAll then return true end
+    return State.ESPSelected and State.SelectedPlayer == player.Name
+end
+
+local function applyESP(player)
+    clearESP(player)
+    if player == LocalPlayer or not shouldESP(player) then return end
+    local char = player.Character
+    if not char then return end
+
+    local objs = {}
+
+    local hl = Instance.new("Highlight")
+    hl.FillColor = RED
+    hl.OutlineColor = RED
+    hl.FillTransparency = 0.5
+    hl.OutlineTransparency = 0
+    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    hl.Adornee = char
+    hl.Parent = char
+    table.insert(objs, hl)
+
+    local head = char:FindFirstChild("Head")
+    if head then
+        local bb = Instance.new("BillboardGui")
+        bb.Size = UDim2.fromOffset(140, 30)
+        bb.StudsOffset = Vector3.new(0, 2.5, 0)
+        bb.AlwaysOnTop = true
+        bb.Adornee = head
+        bb.Parent = head
+
+        local tl = Instance.new("TextLabel")
+        tl.Size = UDim2.fromScale(1, 1)
+        tl.BackgroundTransparency = 1
+        tl.TextColor3 = RED
+        tl.TextStrokeTransparency = 0
+        tl.Font = Enum.Font.GothamBold
+        tl.TextScaled = true
+        tl.Text = player.Name
+        tl.Parent = bb
+        table.insert(objs, bb)
+    end
+
+    ESPObjects[player] = objs
+end
+
+local function refreshAllESP()
+    for _, p in ipairs(Players:GetPlayers()) do
+        applyESP(p)
+    end
+end
+
+local function hookPlayer(p)
+    p.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        applyESP(p)
+    end)
+end
+
+for _, p in ipairs(Players:GetPlayers()) do
+    hookPlayer(p)
+end
+Players.PlayerAdded:Connect(hookPlayer)
+Players.PlayerRemoving:Connect(function(p)
+    clearESP(p)
+end)
+
+-- ================== View ==================
+local function setView(on)
+    local cam = Workspace.CurrentCamera
+    local target = on and getSelected()
+    local hum = target and target.Character and target.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        cam.CameraSubject = hum
+    else
+        local myHum = getHum()
+        if myHum then cam.CameraSubject = myHum end
+    end
+end
+
+-- ================== Teleport ==================
+local function teleportToSelected()
+    local target = getSelected()
+    local myRoot = getRoot()
+    local troot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+    if myRoot and troot then
+        myRoot.CFrame = troot.CFrame + Vector3.new(0, 3, 0)
+    end
+end
+
+-- ================== Zero Gravity (طيران نحو نقطة تحددها الكاميرا) ==================
+UserInputService.InputBegan:Connect(function(input, gp)
+    if not State.ZeroG then return end
+    if input.UserInputType == Enum.UserInputType.Touch
+        or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        touchInput = input
+        touchPos = input.Position
+        touching = true
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == touchInput then
+        touchPos = input.Position
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input == touchInput then
+        touchInput = nil
+        touchPos = nil
+        touching = false
+    end
+end)
+
+local function setZeroG(on)
+    State.ZeroG = on
+    local root, hum = getRoot(), getHum()
+
+    if on and root and hum then
+        hum.PlatformStand = true
+
+        ZeroGAtt = Instance.new("Attachment")
+        ZeroGAtt.Parent = root
+
+        ZeroGForce = Instance.new("VectorForce")
+        ZeroGForce.Attachment0 = ZeroGAtt
+        ZeroGForce.RelativeTo = Enum.ActuatorRelativeTo.World
+        ZeroGForce.Force = Vector3.new(0, Workspace.Gravity * root.AssemblyMass, 0)
+        ZeroGForce.Parent = root
+    else
+        if ZeroGForce then ZeroGForce:Destroy() ZeroGForce = nil end
+        if ZeroGAtt then ZeroGAtt:Destroy() ZeroGAtt = nil end
+        ZeroGVel = Vector3.zero
+        touching = false
+        if hum then hum.PlatformStand = false end
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+    if State.ZeroG then
+        task.wait(1)
+        setZeroG(true)
+    end
+end)
+
+-- ================== Noclip ==================
+RunService.Stepped:Connect(function()
+    if State.Noclip and getChar() then
+        for _, part in ipairs(getChar():GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- ================== Infinity Jump ==================
+UserInputService.JumpRequest:Connect(function()
+    if State.InfJump then
+        local hum = getHum()
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+-- ================== Heartbeat: سرعة + قفز + جاذبية صفر ==================
+RunService.Heartbeat:Connect(function(dt)
+    local hum = getHum()
+    if hum then
+        if State.SpeedOn then
+            hum.WalkSpeed = State.Speed
+        end
+        if State.JumpOn then
+            hum.UseJumpPower = true
+            hum.JumpPower = State.JumpPower
+        end
+    end
+
+    if State.ZeroG then
+        local root = getRoot()
+        local cam = Workspace.CurrentCamera
+        if root and cam then
+            local target = Vector3.zero
+
+            if touching and touchPos then
+                local ray = cam:ViewportPointToRay(touchPos.X, touchPos.Y)
+
+                local params = RaycastParams.new()
+                params.FilterType = Enum.RaycastFilterType.Exclude
+                params.FilterDescendantsInstances = {getChar()}
+
+                local hit = Workspace:Raycast(ray.Origin, ray.Direction * 500, params)
+                local dest = hit and hit.Position or (ray.Origin + ray.Direction * 200)
+
+                local diff = dest - root.Position
+                if diff.Magnitude > 4 then
+                    target = diff.Unit * State.ZeroGSpeed
+                end
+            end
+
+            ZeroGVel = ZeroGVel:Lerp(target, math.clamp(dt * 6, 0, 1))
+            root.AssemblyLinearVelocity = ZeroGVel
+        end
+    end
+end)
+
+-- ================== واجهة WindUI ==================
+local Window = WindUI:CreateWindow({
+    Title = "سكربت ali",
+    Icon = "door-open",
+    Author = "by .مطور علاوي",
+    Folder = "ali_script",
+    Size = UDim2.fromOffset(580, 460),
+    MinSize = Vector2.new(560, 350),
+    MaxSize = Vector2.new(850, 560),
+    ToggleKey = Enum.KeyCode.RightShift,
+    Transparent = true,
+    Theme = themeName,
+    Resizable = true,
+    SideBarWidth = 200,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+    BackgroundImageTransparency = 0.42,
+})
+
+-- ---------- تبويب الميزات ----------
+local MainTab = Window:Tab({
+    Title = "الميزات",
+    Icon = "bird",
+    Locked = false,
+})
+
+PlayersTab:Toggle({
+    Title = "كشف كل",
+    Default = false,
+    Callback = function(v)
+        State.ESPAll = v
+        refreshAllESP()
+    end,
+})
+
+MainTab:Input({
+    Title = "سرعة المشي",
+    Placeholder = "16",
+    Callback = function(txt)
+        local n = tonumber(txt)
+        if n then State.Speed = n end
+    end,
+})
+
+MainTab:Toggle({
+    Title = "تشغيل السرعة",
+    Default = false,
+    Callback = function(v) State.SpeedOn = v end,
+})
+
+MainTab:Input({
+    Title = "قوة القفز",
+    Placeholder = "50",
+    Callback = function(txt)
+        local n = tonumber(txt)
+        if n then State.JumpPower = n end
+    end,
+})
+
+MainTab:Toggle({
+    Title = "تشغيل القفز",
+    Default = false,
+    Callback = function(v) State.JumpOn = v end,
+})
+
+MainTab:Toggle({
+    Title = "اختراق جدران",
+    Default = false,
+    Callback = function(v) State.Noclip = v end,
+})
+
+MainTab:Toggle({
+    Title = "قفز لا نهائي",
+    Default = false,
+    Callback = function(v) State.InfJump = v end,
+})
+
+MainTab:Toggle({
+    Title = "جاذبية صفر / طيران",
+Desc = "(اضغط مطولاً على الشاشة للطيران نحو المكان)",
+    Default = false,
+    Callback = function(v) setZeroG(v) end,
+})
+
+MainTab:Input({
+    Title = "سرعه طيران جاذبيه",
+    Placeholder = "60",
+    Callback = function(txt)
+        local n = tonumber(txt)
+        if n then State.ZeroGSpeed = n end
+    end,
+})
+
+-- ---------- تبويب اللاعبين ----------
+local PlayersTab = Window:Tab({
+    Title = "اللاعبين",
+    Icon = "users",
+    Locked = false,
+})
+
+local PlayerDropdown = PlayersTab:Dropdown({
+    Title = "اختر لاعب",
+    Values = getPlayerList(),
+    Value = nil,
+    Callback = function(name)
+        State.SelectedPlayer = name
+        if State.ESPSelected then refreshAllESP() end
+        if State.View then setView(true) end
+    end,
+})
+
+Players.PlayerAdded:Connect(function()
+    PlayerDropdown:Refresh(getPlayerList())
+end)
+Players.PlayerRemoving:Connect(function()
+    task.wait()
+    PlayerDropdown:Refresh(getPlayerList())
+end)
+
+PlayersTab:Toggle({
+    Title = "ESP للاعب المختار",
+    Default = false,
+    Callback = function(v)
+        State.ESPSelected = v
+        refreshAllESP()
+    end,
+})
+
+
+PlayersTab:Toggle({
+    Title = "View للاعب المختار",
+    Default = false,
+    Callback = function(v)
+        State.View = v
+        setView(v)
+    end,
+})
+
+PlayersTab:Toggle({
+    Title = "Teleport للاعب المختار (فعّل للانتقال)",
+    Default = false,
+    Callback = function(v)
+        if v then teleportToSelected() end
+    end,
+})
