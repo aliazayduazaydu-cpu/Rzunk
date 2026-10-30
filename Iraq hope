@@ -24,27 +24,7 @@ end)
 if not ok then
     themeName = "Dark"
 end
---__________________________________________________________________
---__________________________________________________________________
-local InfoTab = Window:Tab({
-    Title = "قائمة رائيسيه",
-    Icon = "bird",
-    Locked = false,
-})
 
-InfoTab:Code({
-    Title = "Code",
-    Code = [[حسابي في روبلوكس hdjjlawe]],
-})
-
-InfoTab:Code({
-    Title = "Code",
-    Code = [[حسابي في يوتيوب : مطور علاوي]],
-})
-InfoTab:Code({
-    Title = "Code",
-    Code = [[سكربت لماب عراق هوب]],
-})
 -- ================== المتغيرات ==================
 local State = {
     ESPAll = false,
@@ -337,20 +317,33 @@ local Window = WindUI:CreateWindow({
     BackgroundImageTransparency = 0.42,
 })
 
+-- ---------- قائمة رائيسيه (أول تبويب) ----------
+local InfoTab = Window:Tab({
+    Title = "قائمة رائيسيه",
+    Icon = "bird",
+    Locked = false,
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[حسابي في روبلوكس hdjjlawe]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[حسابي في يوتيوب : مطور علاوي]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[سكربت لماب عراق هوب]],
+})
+
 -- ---------- تبويب الميزات ----------
 local MainTab = Window:Tab({
     Title = "الميزات",
     Icon = "bird",
     Locked = false,
-})
-
-PlayersTab:Toggle({
-    Title = "كشف كل",
-    Default = false,
-    Callback = function(v)
-        State.ESPAll = v
-        refreshAllESP()
-    end,
 })
 
 MainTab:Input({
@@ -397,7 +390,7 @@ MainTab:Toggle({
 
 MainTab:Toggle({
     Title = "جاذبية صفر / طيران",
-Desc = "(اضغط مطولاً على الشاشة للطيران نحو المكان)",
+    Desc = "(اضغط مطولاً على الشاشة للطيران نحو المكان)",
     Default = false,
     Callback = function(v) setZeroG(v) end,
 })
@@ -413,7 +406,7 @@ MainTab:Input({
 
 -- ---------- تبويب اللاعبين ----------
 local PlayersTab = Window:Tab({
-    Title = "اللاعبين",
+    Title = "استهداف",
     Icon = "users",
     Locked = false,
 })
@@ -438,7 +431,16 @@ Players.PlayerRemoving:Connect(function()
 end)
 
 PlayersTab:Toggle({
-    Title = "ESP للاعب المختار",
+    Title = "كشف كل",
+    Default = false,
+    Callback = function(v)
+        State.ESPAll = v
+        refreshAllESP()
+    end,
+})
+
+PlayersTab:Toggle({
+    Title = "كشف لاعب",
     Default = false,
     Callback = function(v)
         State.ESPSelected = v
@@ -446,9 +448,8 @@ PlayersTab:Toggle({
     end,
 })
 
-
 PlayersTab:Toggle({
-    Title = "View للاعب المختار",
+    Title = "مشاهدة لاعب",
     Default = false,
     Callback = function(v)
         State.View = v
@@ -457,7 +458,7 @@ PlayersTab:Toggle({
 })
 
 PlayersTab:Toggle({
-    Title = "Teleport للاعب المختار (فعّل للانتقال)",
+    Title = "انتقال الى لاعب",
     Default = false,
     Callback = function(v)
         if v then teleportToSelected() end
