@@ -741,7 +741,7 @@ CopyTab:Button({
 
 
 local ProtectTab = Window:Tab({
-    Title = "الحماية",
+    Title = "قائمة مضادات",
     Icon = "shield",
     Locked = false,
 })
@@ -831,7 +831,7 @@ end
 -- ================== الزر ==================
 ProtectTab:Toggle({
     Title = "مضاد الموت",
-    Desc = "درع + منع اللمس + تعبئة الصحة",
+    Desc = "ما يشتغل عند لاعبين",
     Default = false,
     Callback = function(state)
         WantEnabled = state
