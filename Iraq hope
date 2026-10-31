@@ -1250,3 +1250,111 @@ CopyTab:Button({
         })
     end,
 })
+
+--__________________________________________________________________
+--__________________________________________________________________
+--__________________________________________________________________
+
+
+local ProtectTab = Window:Tab({
+    Title = "قائمة مضادات",
+    Icon = "shield",
+    Locked = false,
+})
+
+-- ================== نظام عدم الموت ==================
+local WantEnabled = false
+local Active = false
+local Character, Humanoid, Shield, OriginalMaxHealth
+local Connections = {}
+local Original = {}
+
+local function Cleanup()
+    for _, c in ipairs(Connections) do
+        c:Disconnect()
+    end
+    table.clear(Connections)
+
+    for part, value in pairs(Original) do
+        if part.Parent then
+            part.CanTouch = value
+        end
+    end
+    table.clear(Original)
+
+    if Shield then
+        Shield:Destroy()
+        Shield = nil
+    end
+
+    if Humanoid and Humanoid.Parent and OriginalMaxHealth then
+        Humanoid.MaxHealth = OriginalMaxHealth
+    end
+    OriginalMaxHealth = nil
+    Active = false
+end
+
+local function ApplyTouch(obj)
+    if obj:IsA("BasePart") and Original[obj] == nil then
+        Original[obj] = obj.CanTouch
+        obj.CanTouch = false
+    end
+end
+
+local function StartProtection()
+    Cleanup()
+    if not Character or not Humanoid or Humanoid.Health <= 0 then
+        return
+    end
+
+    Active = true
+
+    Shield = Instance.new("ForceField")
+    Shield.Visible = true
+    Shield.Parent = Character
+
+    for _, desc in ipairs(Character:GetDescendants()) do
+        ApplyTouch(desc)
+    end
+    table.insert(Connections, Character.DescendantAdded:Connect(ApplyTouch))
+
+    OriginalMaxHealth = Humanoid.MaxHealth
+    Humanoid.MaxHealth = 1000000000
+    Humanoid.Health = Humanoid.MaxHealth
+
+    table.insert(Connections, Humanoid.HealthChanged:Connect(function(hp)
+        if Active and hp < Humanoid.MaxHealth then
+            Humanoid.Health = Humanoid.MaxHealth
+        end
+    end))
+end
+
+local function OnCharacter(char)
+    Cleanup()
+    Character = char
+    Humanoid = char:WaitForChild("Humanoid")
+
+    if WantEnabled then
+        StartProtection()
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(OnCharacter)
+if LocalPlayer.Character then
+    task.spawn(OnCharacter, LocalPlayer.Character)
+end
+
+-- ================== الزر ==================
+ProtectTab:Toggle({
+    Title = "مضاد الموت",
+    Desc = "ما يشتغل عند لاعبين",
+    Default = false,
+    Callback = function(state)
+        WantEnabled = state
+        if state then
+            StartProtection()
+        else
+            Cleanup()
+        end
+    end
+})
