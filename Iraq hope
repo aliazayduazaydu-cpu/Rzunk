@@ -1426,3 +1426,58 @@ ProtectTab:Toggle({
         end
     end
 })
+local NoclipOthersGen = 0          -- يمنع تشغيل أكثر من حلقة في نفس الوقت
+local OthersOriginalCollide = {}   -- [BasePart] = CanCollide الأصلي
+
+local function ApplyNoclipToOthers()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            for _, d in ipairs(plr.Character:GetDescendants()) do
+                if d:IsA("BasePart") then
+                    if OthersOriginalCollide[d] == nil then
+                        OthersOriginalCollide[d] = d.CanCollide
+                    end
+                    d.CanCollide = false
+                end
+            end
+        end
+    end
+end
+
+local function RestoreOthers()
+    for part, original in pairs(OthersOriginalCollide) do
+        if part.Parent then
+            part.CanCollide = original
+        end
+    end
+    table.clear(OthersOriginalCollide)
+end
+
+local function StartNoclipOthers()
+    NoclipOthersGen += 1
+    local gen = NoclipOthersGen
+    task.spawn(function()
+        while NoclipOthersEnabled and gen == NoclipOthersGen do
+            ApplyNoclipToOthers()
+            task.wait(0.3)
+        end
+        if gen == NoclipOthersGen then
+            RestoreOthers()
+        end
+    end)
+end
+
+ProtectTab:Toggle({
+    Title = "مضاد فنق",
+    Desc = "ما يقدر يطيروك في جو",
+    Default = false,
+    Callback = function(state)
+        NoclipOthersEnabled = state
+        if state then
+            StartNoclipOthers()
+        else
+            NoclipOthersGen += 1
+            RestoreOthers()
+        end
+    end
+})
