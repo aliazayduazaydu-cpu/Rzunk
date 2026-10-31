@@ -736,24 +736,35 @@ CopyTab:Button({
 })
 
 --__________________________________________________________________
+--__________________________________________________________________
+--__________________________________________________________________
 
-local WantProtection = false
+
+local ProtectTab = Window:Tab({
+    Title = "الحماية",
+    Icon = "shield",
+    Locked = false,
+})
+
+-- ================== نظام عدم الموت ==================
+local WantEnabled = false
 local Active = false
+local Character, Humanoid, Shield, OriginalMaxHealth
+local Connections = {}
+local Original = {}
 
-local Character
-local Humanoid
-local Shield
-
-local HealthConnection
-local OriginalMaxHealth
-
-local function StopAntiDeath()
-    Active = false
-
-    if HealthConnection then
-        HealthConnection:Disconnect()
-        HealthConnection = nil
+local function Cleanup()
+    for _, c in ipairs(Connections) do
+        c:Disconnect()
     end
+    table.clear(Connections)
+
+    for part, value in pairs(Original) do
+        if part.Parent then
+            part.CanTouch = value
+        end
+    end
+    table.clear(Original)
 
     if Shield then
         Shield:Destroy()
@@ -763,66 +774,71 @@ local function StopAntiDeath()
     if Humanoid and Humanoid.Parent and OriginalMaxHealth then
         Humanoid.MaxHealth = OriginalMaxHealth
     end
-
     OriginalMaxHealth = nil
+    Active = false
 end
 
-local function StartAntiDeath()
-    StopAntiDeath()
+local function ApplyTouch(obj)
+    if obj:IsA("BasePart") and Original[obj] == nil then
+        Original[obj] = obj.CanTouch
+        obj.CanTouch = false
+    end
+end
 
-    Character = game.Players.LocalPlayer.Character
-    if not Character then return end
-
-    Humanoid = Character:FindFirstChildOfClass("Humanoid")
-    if not Humanoid or Humanoid.Health <= 0 then return end
+local function StartProtection()
+    Cleanup()
+    if not Character or not Humanoid or Humanoid.Health <= 0 then
+        return
+    end
 
     Active = true
 
-    -- الدرع الأخضر
     Shield = Instance.new("ForceField")
     Shield.Visible = true
     Shield.Parent = Character
 
-    -- الصحة
+    for _, desc in ipairs(Character:GetDescendants()) do
+        ApplyTouch(desc)
+    end
+    table.insert(Connections, Character.DescendantAdded:Connect(ApplyTouch))
+
     OriginalMaxHealth = Humanoid.MaxHealth
     Humanoid.MaxHealth = 1000000000
     Humanoid.Health = Humanoid.MaxHealth
 
-    HealthConnection = Humanoid.HealthChanged:Connect(function()
-        if Active and Humanoid.Parent
-        and Humanoid.Health > 0
-        and Humanoid.Health < Humanoid.MaxHealth then
+    table.insert(Connections, Humanoid.HealthChanged:Connect(function(hp)
+        if Active and hp < Humanoid.MaxHealth then
             Humanoid.Health = Humanoid.MaxHealth
         end
-    end)
+    end))
 end
 
--- زر WindUI
-
-ProtectTab:Toggle({
-    Title = "مضاد الموت",
-    Desc = "تشغيل وإيقاف نظام الدرع والصحة",
-    Default = false,
-
-    Callback = function(Value)
-        WantProtection = Value
-
-        if Value then
-            StartAntiDeath()
-        else
-            StopAntiDeath()
-        end
-    end
-})
-
--- إعادة التطبيق بعد Respawn
-
-game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+local function OnCharacter(char)
+    Cleanup()
     Character = char
     Humanoid = char:WaitForChild("Humanoid")
 
-    if WantProtection then
-        task.wait(0.5)
-        StartAntiDeath()
+    if WantEnabled then
+        StartProtection()
     end
-end)
+end
+
+LocalPlayer.CharacterAdded:Connect(OnCharacter)
+if LocalPlayer.Character then
+    task.spawn(OnCharacter, LocalPlayer.Character)
+end
+
+-- ================== الزر ==================
+ProtectTab:Toggle({
+    Title = "مضاد الموت",
+    Desc = "درع + منع اللمس + تعبئة الصحة",
+    Default = false,
+    Callback = function(state)
+        WantEnabled = state
+        if state then
+            StartProtection()
+        else
+            Cleanup()
+        end
+    end
+})
