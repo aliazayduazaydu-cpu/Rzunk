@@ -743,10 +743,8 @@ local FloatTab = Window:Tab({
     Icon = "cloud",
     Locked = false,
 })
--- ===== نظام عدم الموت =====
-local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
 
+-- ===== نظام عدم الموت =====
 local WantEnabled = false
 local Active = false
 local Character, Humanoid, Shield, OriginalMaxHealth
@@ -828,23 +826,17 @@ if Player.Character then
     task.spawn(OnCharacter, Player.Character)
 end
 
--- ===== زر Wind UI =====
-
-local function AddAntiDeathToggle(tab)
-    tab:Toggle({
-        Title = "مضاد الموت",
-        Desc = "ما يشتغل على لاعبين",
-        Default = false,
-        Callback = function(state)
-            WantEnabled = state
-            if state then
-                StartProtection()
-            else
-                Cleanup()
-            end
+-- ===== الزر =====
+Tab:Toggle({
+    Title = "مضاد الموت",
+    Desc = "درع + منع اللمس + تعبئة الصحة",
+    Default = false,
+    Callback = function(state)
+        WantEnabled = state
+        if state then
+            StartProtection()
+        else
+            Cleanup()
         end
-    })
-end
-
--- مثال الاستخدام:
--- AddAntiDeathToggle(MyTab)
+    end
+})
