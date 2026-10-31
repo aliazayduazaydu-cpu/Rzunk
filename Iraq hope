@@ -1481,3 +1481,47 @@ ProtectTab:Toggle({
         end
     end
 })
+
+-- ================== مضاد الجلوس ==================
+local AntiSitEnabled = false
+local AntiSitConn
+
+local function StopAntiSit()
+    if AntiSitConn then
+        AntiSitConn:Disconnect()
+        AntiSitConn = nil
+    end
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+    end
+end
+
+local function StartAntiSit()
+    StopAntiSit()
+    AntiSitConn = RunService.Heartbeat:Connect(function()
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if not hum then return end
+        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+        if hum.Sit then
+            hum.Sit = false
+            hum.Jump = true
+        end
+    end)
+end
+
+ProtectTab:Toggle({
+    Title = "مضاد الجلوس",
+    Desc = "يمنع فنق جلوس",
+    Default = false,
+    Callback = function(state)
+        AntiSitEnabled = state
+        if state then
+            StartAntiSit()
+        else
+            StopAntiSit()
+        end
+    end
+})
