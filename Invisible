@@ -736,16 +736,6 @@ CopyTab:Button({
 })
 
 --__________________________________________________________________
---__________________________________________________________________
-
-local FloatTab = Window:Tab({
-    Title = "قائمه مضادات",
-    Icon = "cloud",
-    Locked = false,
-})
-
-
--- ANTI DEATH TOGGLE
 
 local WantProtection = false
 local Active = false
