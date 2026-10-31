@@ -842,3 +842,69 @@ ProtectTab:Toggle({
         end
     end
 })
+-- ================== مضاد الفويد ==================
+local VoidEnabled = false
+local VoidDistance = 550     -- قوة/ارتفاع الصعود (ثابت)
+local TriggerDepth = 400     -- كم ستد تنزل تحت آخر أرضية قبل التفعيل (ثابت)
+local VoidConn
+local LastGroundY = nil
+local LastBoost = 0
+
+local function StopVoid()
+    if VoidConn then
+        VoidConn:Disconnect()
+        VoidConn = nil
+    end
+    LastGroundY = nil
+end
+
+local function StartVoid()
+    StopVoid()
+    VoidConn = RunService.Heartbeat:Connect(function()
+        local char = LocalPlayer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if not root or not hum or hum.Health <= 0 then return end
+
+        -- تسجيل آخر ارتفاع وقفت عليه فعلاً
+        if hum.FloorMaterial ~= Enum.Material.Air then
+            LastGroundY = root.Position.Y
+            return
+        end
+
+        if not LastGroundY then return end
+
+        local vel = root.AssemblyLinearVelocity
+
+        -- يتفعّل فقط إذا نزلت تحت آخر أرضية بـ TriggerDepth وأنت تسقط
+        if root.Position.Y > LastGroundY - TriggerDepth or vel.Y >= 0 then return end
+
+        -- إذا فيه أرض قريبة تحتك لا يتدخل
+        local params = RaycastParams.new()
+        params.FilterType = Enum.RaycastFilterType.Exclude
+        params.FilterDescendantsInstances = { char }
+        local hit = Workspace:Raycast(root.Position, Vector3.new(0, -math.max(300, TriggerDepth), 0), params)
+        if hit then return end
+
+        -- مانع تكرار سريع
+        if os.clock() - LastBoost < 0.5 then return end
+        LastBoost = os.clock()
+
+        local v = math.sqrt(2 * Workspace.Gravity * VoidDistance)
+        root.AssemblyLinearVelocity = Vector3.new(vel.X, v, vel.Z)
+    end)
+end
+
+ProtectTab:Toggle({
+    Title = "مضاد الفويد",
+    Desc = "يمنع موت في فويد",
+    Default = false,
+    Callback = function(state)
+        VoidEnabled = state
+        if state then
+            StartVoid()
+        else
+            StopVoid()
+        end
+    end
+})
