@@ -1,74 +1,65 @@
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+--==================================================
+-- ALI SCRIPT - REDZ LIBRARY
+-- PART 1
+--==================================================
+
+local redzlib = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"
+))()
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+
 local LocalPlayer = Players.LocalPlayer
 
--- ================== الثيم ==================
-local themeName = "Purple"
-local ok = pcall(function()
-    WindUI:AddTheme({
-        Name = "Purple",
-        Accent = Color3.fromHex("#8B5CF6"),
-        Dialog = Color3.fromHex("#1E1433"),
-        Outline = Color3.fromHex("#A78BFA"),
-        Text = Color3.fromHex("#F5F3FF"),
-        Placeholder = Color3.fromHex("#C4B5FD"),
-        Background = Color3.fromHex("#140D26"),
-        Button = Color3.fromHex("#5B21B6"),
-        Icon = Color3.fromHex("#C4B5FD"),
-    })
-end)
-if not ok then
-    themeName = "Dark"
-end
-local Window = WindUI:CreateWindow({
+--==================================================
+-- WINDOW
+--==================================================
+
+local Window = redzlib:MakeWindow({
     Title = "سكربت ali",
-    Icon = "door-open",
-    Author = "by .مطور علاوي",
-    Folder = "ali_script",
-    Size = UDim2.fromOffset(580, 460),
-    MinSize = Vector2.new(560, 350),
-    MaxSize = Vector2.new(850, 560),
-    ToggleKey = Enum.KeyCode.RightShift,
-    Transparent = true,
-    Theme = themeName,
-    Resizable = true,
-    SideBarWidth = 200,
-    HideSearchBar = true,
-    ScrollBarEnabled = false,
-    BackgroundImageTransparency = 0.42,
+    SubTitle = "by .مطور علاوي",
+    SaveFolder = "AlawiHub"
 })
 
--- ---------- قائمة رائيسيه (أول تبويب) ----------
-local InfoTab = Window:Tab({
-    Title = "قائمة رائيسيه",
-    Icon = "bird",
-    Locked = false,
+Window:AddMinimizeButton({
+    Button = {
+        Image = "rbxassetid://11028318025",
+        BackgroundTransparency = 0
+    },
+    Corner = {
+        CornerRadius = UDim.new(35, 1)
+    }
 })
 
-InfoTab:Code({
-    Title = "Code",
-    Code = [[حسابي في روبلوكس hdjjlawe]],
-})
-
-InfoTab:Code({
-    Title = "Code",
-    Code = [[حسابي في يوتيوب : مطور علاوي]],
-})
-
-InfoTab:Code({
-    Title = "Code",
-    Code = [[سكربت لماب عراق هوب]],
-})
 --==================================================
--- FLOAT SYSTEM - ALI
+-- MAIN TAB
 --==================================================
 
-local FloatPlayer = Players.LocalPlayer
-local FloatRunService = RunService
+local InfoTab = Window:MakeTab({"قائمة رئيسية", "home"})
+
+InfoTab:AddParagraph({
+    "حساب روبلوكس",
+    "hdjjlawe"
+})
+
+InfoTab:AddParagraph({
+    "حساب يوتيوب",
+    "مطور علاوي"
+})
+
+InfoTab:AddParagraph({
+    "معلومات",
+    "سكربت لماب عراق هوب"
+})
+
+--==================================================
+-- FLOAT SYSTEM
+--==================================================
+
+local FloatPlayer = LocalPlayer
 
 local MAX_DISTANCE = 300
 local MAX_SPEED = 500
@@ -94,14 +85,12 @@ local markerX, markerY, markerZ = 0, 0, 0
 local rootY, targetRootY = 0, 0
 local jumpOffset = 0
 
-local character, humanoid, root
-local marker = nil
-local savedCollide = {}
+local character
+local humanoid
+local root
+local marker
 
-local floatToggle
-local teleportToggle
-local statusParagraph
-local updatingUI = false
+local savedCollide = {}
 
 local rayParams = RaycastParams.new()
 rayParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -110,46 +99,43 @@ local overlapParams = OverlapParams.new()
 overlapParams.FilterType = Enum.RaycastFilterType.Exclude
 
 --==================================================
--- واجهة الطفو
+-- FLOAT TAB
 --==================================================
 
-local function setFloatButton(on)
-    if not floatToggle then return end
+local FloatTab = Window:MakeTab({"قائمة اختفاء", "cloud"})
 
-    updatingUI = true
-    floatToggle:Set(on)
-    updatingUI = false
-end
-
-local function setTeleportButton(on)
-    if not teleportToggle then return end
-
-    updatingUI = true
-    teleportToggle:Set(on)
-    updatingUI = false
-end
+local FloatStatus = FloatTab:AddParagraph({
+    "حالة الاختفاء",
+    "الحالة: على السطح"
+})
 
 local function refreshFloatStatus()
-    if not statusParagraph then return end
+    if not FloatStatus then return end
+
+    local description
 
     if floatOn then
-        statusParagraph:SetDesc(
-            "طافي | المسافة: " .. distance ..
-            " | السرعة: " .. speed
-        )
+        description = "طافي | المسافة: " ..
+            distance .. " | السرعة: " .. speed
     elseif rising then
-        statusParagraph:SetDesc("جاري الصعود...")
+        description = "جاري الصعود..."
     else
-        statusParagraph:SetDesc("الحالة: على السطح")
+        description = "الحالة: على السطح"
     end
+
+    pcall(function()
+        FloatStatus:SetDesc(description)
+    end)
 end
 
 --==================================================
--- المربع
+-- MARKER
 --==================================================
 
 local function createMarker()
-    if marker then marker:Destroy() end
+    if marker then
+        marker:Destroy()
+    end
 
     marker = Instance.new("Part")
     marker.Name = "AliFloatMarker"
@@ -162,10 +148,17 @@ local function createMarker()
     marker.Transparency = 0
     marker.Size = MARKER_SIZE
     marker.CFrame = CFrame.new(markerX, markerY, markerZ)
-    marker.Parent = workspace
+    marker.Parent = Workspace
 
-    rayParams.FilterDescendantsInstances = {character, marker}
-    overlapParams.FilterDescendantsInstances = {character, marker}
+    rayParams.FilterDescendantsInstances = {
+        character,
+        marker
+    }
+
+    overlapParams.FilterDescendantsInstances = {
+        character,
+        marker
+    }
 end
 
 local function removeMarker()
@@ -176,7 +169,7 @@ local function removeMarker()
 end
 
 --==================================================
--- التصادم
+-- COLLISION
 --==================================================
 
 local function disableFloatCollide()
@@ -184,6 +177,7 @@ local function disableFloatCollide()
 
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
+
             if savedCollide[part] == nil then
                 savedCollide[part] = part.CanCollide
             end
@@ -203,8 +197,12 @@ local function restoreFloatCollide()
     savedCollide = {}
 end
 
+--==================================================
+-- CAMERA
+--==================================================
+
 local function setFloatCamera(on)
-    local cam = workspace.CurrentCamera
+    local cam = Workspace.CurrentCamera
     if not cam then return end
 
     cam.CameraType = Enum.CameraType.Custom
@@ -217,11 +215,11 @@ local function setFloatCamera(on)
 end
 
 --==================================================
--- اكتشاف الأرض
+-- GROUND DETECTION
 --==================================================
 
 local function probeTop(x, z)
-    local result = workspace:Blockcast(
+    local result = Workspace:Blockcast(
         CFrame.new(x, markerY + 1, z),
         MARKER_SIZE,
         Vector3.new(0, -600, 0),
@@ -236,7 +234,7 @@ local function probeTop(x, z)
 end
 
 local function blockingTop(x, z)
-    local parts = workspace:GetPartBoundsInBox(
+    local parts = Workspace:GetPartBoundsInBox(
         CFrame.new(x, markerY + 20.5, z),
         COLUMN_SIZE,
         overlapParams
@@ -244,9 +242,9 @@ local function blockingTop(x, z)
 
     local highest = nil
 
-    for _, p in ipairs(parts) do
-        if p.CanCollide then
-            local top = p.Position.Y + p.Size.Y / 2
+    for _, part in ipairs(parts) do
+        if part.CanCollide then
+            local top = part.Position.Y + part.Size.Y / 2
 
             if not highest or top > highest then
                 highest = top
@@ -258,7 +256,7 @@ local function blockingTop(x, z)
 end
 
 --==================================================
--- حركة المربع
+-- MARKER MOVEMENT
 --==================================================
 
 local function tryMove(delta)
@@ -268,27 +266,34 @@ local function tryMove(delta)
     local top = blockingTop(nx, nz)
 
     if not top or top <= markerY + 0.5 then
-        markerX, markerZ = nx, nz
+        markerX = nx
+        markerZ = nz
         return
     end
 
     if top - markerY <= STEP_HEIGHT then
-        markerX, markerZ = nx, nz
+        markerX = nx
+        markerZ = nz
         markerY = top + MARKER_SIZE.Y / 2
     end
 end
 
 --==================================================
--- الانتقال إلى المكان المحدد
+-- TOUCH TELEPORT
 --==================================================
 
 local function floatTeleportTo(screenX, screenY)
     if not floatOn or not marker then return end
 
-    local cam = workspace.CurrentCamera
-    local ray = cam:ViewportPointToRay(screenX, screenY)
+    local cam = Workspace.CurrentCamera
+    if not cam then return end
 
-    local hit = workspace:Raycast(
+    local ray = cam:ViewportPointToRay(
+        screenX,
+        screenY
+    )
+
+    local hit = Workspace:Raycast(
         ray.Origin,
         ray.Direction * 2000,
         rayParams
@@ -304,7 +309,7 @@ local function floatTeleportTo(screenX, screenY)
 end
 
 --==================================================
--- تشغيل الطفو
+-- START FLOAT
 --==================================================
 
 local function startFloat()
@@ -334,23 +339,25 @@ local function startFloat()
     local cf = root.CFrame
 
     root.CFrame =
-        CFrame.new(markerX, markerY - distance, markerZ)
-        * (cf - cf.Position)
+        CFrame.new(
+            markerX,
+            markerY - distance,
+            markerZ
+        ) * (cf - cf.Position)
 
     root.AssemblyLinearVelocity = Vector3.zero
     root.AssemblyAngularVelocity = Vector3.zero
 
     setFloatCamera(true)
-    setFloatButton(true)
     refreshFloatStatus()
 end
 
 --==================================================
--- إيقاف الطفو
+-- STOP FLOAT
 --==================================================
 
 local function stopFloat()
-    if not floatOn then return end
+    if not floatOn or not root then return end
 
     floatOn = false
     rising = true
@@ -363,12 +370,11 @@ local function stopFloat()
         probeTop(markerX, markerZ) + 3
     )
 
-    setFloatButton(false)
     refreshFloatStatus()
 end
 
 --==================================================
--- إنهاء الصعود
+-- FINISH RISING
 --==================================================
 
 local function finishRise()
@@ -379,6 +385,7 @@ local function finishRise()
 
     if humanoid then
         humanoid.PlatformStand = false
+
         humanoid:ChangeState(
             Enum.HumanoidStateType.GettingUp
         )
@@ -390,11 +397,13 @@ local function finishRise()
 end
 
 --==================================================
--- لمس الشاشة للانتقال
+-- TOUCH INPUT
 --==================================================
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed or not teleportOn then return end
+    if gameProcessed or not teleportOn then
+        return
+    end
 
     if input.UserInputType == Enum.UserInputType.MouseButton1
         or input.UserInputType == Enum.UserInputType.Touch then
@@ -407,7 +416,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 --==================================================
--- القفز أثناء الطفو
+-- JUMP REQUEST
 --==================================================
 
 UserInputService.JumpRequest:Connect(function()
@@ -417,20 +426,20 @@ UserInputService.JumpRequest:Connect(function()
 end)
 
 --==================================================
--- تعطيل التصادم أثناء الطفو
+-- DISABLE COLLISION
 --==================================================
 
-FloatRunService.Stepped:Connect(function()
+RunService.Stepped:Connect(function()
     if floatOn or rising then
         disableFloatCollide()
     end
 end)
 
 --==================================================
--- تحديث الحركة
+-- FLOAT MOVEMENT LOOP
 --==================================================
 
-FloatRunService.RenderStepped:Connect(function(dt)
+RunService.RenderStepped:Connect(function(dt)
     if not character or not root or not humanoid then
         return
     end
@@ -515,7 +524,7 @@ FloatRunService.RenderStepped:Connect(function(dt)
 end)
 
 --==================================================
--- إعادة ضبط الطفو عند ظهور الشخصية
+-- CHARACTER ADDED
 --==================================================
 
 local function onFloatCharacterAdded(char)
@@ -533,33 +542,29 @@ local function onFloatCharacterAdded(char)
 
     removeMarker()
     setFloatCamera(false)
-    setFloatButton(false)
-    setTeleportButton(false)
     refreshFloatStatus()
 end
---__________________________________________________________________
---__________________________________________________________________
+
+FloatPlayer.CharacterAdded:Connect(onFloatCharacterAdded)
+
+if FloatPlayer.Character then
+    task.spawn(
+        onFloatCharacterAdded,
+        FloatPlayer.Character
+    )
+end
 
 --==================================================
--- FLOAT SYSTEM TAB
+-- FLOAT TOGGLES
 --==================================================
 
-local FloatTab = Window:Tab({
-    Title = "قائمة اختفاء",
-    Icon = "cloud",
-    Locked = false,
-})
-
-
-floatToggle = FloatTab:Toggle({
-    Title = "اختفء",
-    Desc = "تشغيل وإيقاف اختفاء",
+FloatTab:AddToggle({
+    Name = "اختفاء",
+    Description = "تشغيل وإيقاف نظام الاختفاء",
     Default = false,
 
-    Callback = function(state)
-        if updatingUI then return end
-
-        if state then
+    Callback = function(value)
+        if value then
             startFloat()
         else
             stopFloat()
@@ -567,11 +572,10 @@ floatToggle = FloatTab:Toggle({
     end
 })
 
--- المسافة
-FloatTab:Input({
-    Title = "مسافه عمق نزول اختفاء",
-    Desc = "المسافة بين اللاعب والمربع (1-300)",
-    Placeholder = "30",
+FloatTab:AddTextBox({
+    Name = "مسافة عمق نزول اختفاء",
+    Description = "المسافة بين اللاعب والمربع",
+    PlaceholderText = "30",
 
     Callback = function(value)
         local number = tonumber(value)
@@ -587,11 +591,10 @@ FloatTab:Input({
     end
 })
 
--- السرعة
-FloatTab:Input({
-    Title = "سرعه مشي مربع",
-    Desc = "سرعة حركة المربع (1-500)",
-    Placeholder = "16",
+FloatTab:AddTextBox({
+    Name = "سرعة مشي مربع",
+    Description = "سرعة حركة المربع",
+    PlaceholderText = "16",
 
     Callback = function(value)
         local number = tonumber(value)
@@ -607,34 +610,28 @@ FloatTab:Input({
     end
 })
 
-
-
-teleportToggle = FloatTab:Toggle({
-    Title = "أداة الانتقال لمربع",
-    Desc = "فعّلها ثم اضغط على المكان لنقل المربع إليه",
+FloatTab:AddToggle({
+    Name = "أداة الانتقال للمربع",
+    Description = "فعّلها ثم اضغط على المكان لنقل المربع",
     Default = false,
 
-    Callback = function(state)
-        if updatingUI then return end
-
-        teleportOn = state
+    Callback = function(value)
+        teleportOn = value
     end
 })
 
 --==================================================
--- CHARACTER
+-- END PART 1
+--==================================================
+--==================================================
+-- ALI SCRIPT - REDZ LIBRARY
+-- PART 2
 --==================================================
 
-FloatPlayer.CharacterAdded:Connect(onFloatCharacterAdded)
+--==================================================
+-- COPY TOOLS
+--==================================================
 
-if FloatPlayer.Character then
-    task.spawn(
-        onFloatCharacterAdded,
-        FloatPlayer.Character
-    )
-end
-
--- ================== Copy Tools ==================
 local selectedName = nil
 
 local function copyToolsFrom(targetPlayer)
@@ -643,9 +640,11 @@ local function copyToolsFrom(targetPlayer)
 
     local count = 0
     local sources = {}
+
     if targetPlayer:FindFirstChildOfClass("Backpack") then
         table.insert(sources, targetPlayer:FindFirstChildOfClass("Backpack"))
     end
+
     if targetPlayer.Character then
         table.insert(sources, targetPlayer.Character)
     end
@@ -654,116 +653,168 @@ local function copyToolsFrom(targetPlayer)
         for _, item in ipairs(source:GetChildren()) do
             if item:IsA("Tool") then
                 item:Clone().Parent = backpack
-                count += 1
+                count = count + 1
             end
         end
     end
+
     return count
 end
 
 local function getPlayerNames()
     local names = {}
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer then
-            table.insert(names, p.Name)
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(names, player.Name)
         end
     end
+
     return names
 end
 
-local CopyTab = Window:Tab({
-    Title = "قائمة نسخ ادوات",
-    Icon = "copy",
-    Locked = false,
-})
+--==================================================
+-- COPY TAB
+--==================================================
 
-CopyTab:Button({
-    Title = "Copy All Tools",
-    Desc = "نسخ أدوات جميع اللاعبين إلى حقيبتك",
+local CopyTab = Window:MakeTab({"قائمة نسخ أدوات", "copy"})
+
+CopyTab:AddButton({
+    Name = "نسخ أدوات جميع اللاعبين",
+    Description = "نسخ الأدوات الموجودة عند اللاعبين",
+
     Callback = function()
         local total = 0
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer then
-                total += copyToolsFrom(p)
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                total = total + copyToolsFrom(player)
             end
         end
-        WindUI:Notify({
-            Title = "نسخ ادوات جميع لاعبين",
-            Content = "تم نسخ " .. total .. " أداة",
-            Duration = 3,
+
+        Window:Dialog({
+            Title = "نسخ الأدوات",
+            Text = "عدد الأدوات: " .. total,
+            Options = {
+                {
+                    Title = "حسناً",
+                    Callback = function()
+                    end
+                }
+            }
         })
-    end,
+    end
 })
 
-local PlayerDropdown = CopyTab:Dropdown({
-    Title = "Select Player",
-    Desc = "اختر لاعب لنسخ أدواته",
-    Values = getPlayerNames(),
-    Value = nil,
+local PlayerDropdown = CopyTab:AddDropdown({
+    Name = "اختيار لاعب",
+    Description = "اختر لاعباً لنسخ أدواته",
+    Options = getPlayerNames(),
+    Default = nil,
+    Flag = "SelectedCopyPlayer",
+
     Callback = function(value)
         selectedName = value
-    end,
+    end
 })
 
-CopyTab:Button({
-    Title = "تحديث قائمة لاعبين",
-    Desc = "حته يضهر لاعبين جديدين",
+CopyTab:AddButton({
+    Name = "تحديث قائمة اللاعبين",
+    Description = "إظهار اللاعبين الجدد",
+
     Callback = function()
         PlayerDropdown:Refresh(getPlayerNames())
-    end,
+    end
 })
 
-CopyTab:Button({
-    Title = "نسخ ادوات لاعب",
-    Desc = "نسخ أدوات اللاعب المختار فقط",
+CopyTab:AddButton({
+    Name = "نسخ أدوات لاعب",
+    Description = "نسخ أدوات اللاعب المحدد",
+
     Callback = function()
         if not selectedName then
-            WindUI:Notify({ Title = "خطأ", Content = "اختر لاعب أولاً", Duration = 3 })
+            warn("اختر لاعباً أولاً")
             return
         end
+
         local target = Players:FindFirstChild(selectedName)
+
         if not target then
-            WindUI:Notify({ Title = "خطأ", Content = "اللاعب غير موجود", Duration = 3 })
+            warn("اللاعب غير موجود")
             return
         end
+
         local count = copyToolsFrom(target)
-        WindUI:Notify({
-            Title = "نسخ ادوات لاعب",
-            Content = "تم نسخ " .. count .. " أداة من " .. selectedName,
-            Duration = 3,
+
+        Window:Dialog({
+            Title = "نسخ أدوات لاعب",
+            Text = "عدد الأدوات: " .. count ..
+                " من اللاعب " .. selectedName,
+
+            Options = {
+                {
+                    Title = "حسناً",
+                    Callback = function()
+                    end
+                }
+            }
         })
-    end,
+    end
 })
 
---__________________________________________________________________
---__________________________________________________________________
---__________________________________________________________________
+Players.PlayerAdded:Connect(function()
+    task.wait(1)
+    pcall(function()
+        PlayerDropdown:Refresh(getPlayerNames())
+    end)
+end)
 
+Players.PlayerRemoving:Connect(function(player)
+    if selectedName == player.Name then
+        selectedName = nil
+    end
 
-local ProtectTab = Window:Tab({
-    Title = "قائمة مضادات",
-    Icon = "shield",
-    Locked = false,
-})
+    task.wait(0.2)
 
--- ================== نظام عدم الموت ==================
+    pcall(function()
+        PlayerDropdown:Refresh(getPlayerNames())
+    end)
+end)
+
+--==================================================
+-- PROTECT TAB
+--==================================================
+
+local ProtectTab = Window:MakeTab({"قائمة مضادات", "shield"})
+
+--==================================================
+-- ANTI DEATH
+--==================================================
+
 local WantEnabled = false
 local Active = false
-local Character, Humanoid, Shield, OriginalMaxHealth
+
+local Character
+local Humanoid
+local Shield
+local OriginalMaxHealth
+
 local Connections = {}
 local Original = {}
 
 local function Cleanup()
-    for _, c in ipairs(Connections) do
-        c:Disconnect()
+    for _, connection in ipairs(Connections) do
+        connection:Disconnect()
     end
+
     table.clear(Connections)
 
     for part, value in pairs(Original) do
-        if part.Parent then
+        if part and part.Parent then
             part.CanTouch = value
         end
     end
+
     table.clear(Original)
 
     if Shield then
@@ -774,6 +825,7 @@ local function Cleanup()
     if Humanoid and Humanoid.Parent and OriginalMaxHealth then
         Humanoid.MaxHealth = OriginalMaxHealth
     end
+
     OriginalMaxHealth = nil
     Active = false
 end
@@ -787,6 +839,7 @@ end
 
 local function StartProtection()
     Cleanup()
+
     if not Character or not Humanoid or Humanoid.Health <= 0 then
         return
     end
@@ -800,21 +853,29 @@ local function StartProtection()
     for _, desc in ipairs(Character:GetDescendants()) do
         ApplyTouch(desc)
     end
-    table.insert(Connections, Character.DescendantAdded:Connect(ApplyTouch))
+
+    table.insert(
+        Connections,
+        Character.DescendantAdded:Connect(ApplyTouch)
+    )
 
     OriginalMaxHealth = Humanoid.MaxHealth
     Humanoid.MaxHealth = 1000000000
     Humanoid.Health = Humanoid.MaxHealth
 
-    table.insert(Connections, Humanoid.HealthChanged:Connect(function(hp)
-        if Active and hp < Humanoid.MaxHealth then
-            Humanoid.Health = Humanoid.MaxHealth
-        end
-    end))
+    table.insert(
+        Connections,
+        Humanoid.HealthChanged:Connect(function(hp)
+            if Active and hp < Humanoid.MaxHealth then
+                Humanoid.Health = Humanoid.MaxHealth
+            end
+        end)
+    )
 end
 
 local function OnCharacter(char)
     Cleanup()
+
     Character = char
     Humanoid = char:WaitForChild("Humanoid")
 
@@ -824,17 +885,19 @@ local function OnCharacter(char)
 end
 
 LocalPlayer.CharacterAdded:Connect(OnCharacter)
+
 if LocalPlayer.Character then
     task.spawn(OnCharacter, LocalPlayer.Character)
 end
 
--- ================== الزر ==================
-ProtectTab:Toggle({
-    Title = "مضاد الموت",
-    Desc = "ما يشتغل عند لاعبين",
+ProtectTab:AddToggle({
+    Name = "مضاد الموت",
+    Description = "حماية محلية للشخصية",
     Default = false,
+
     Callback = function(state)
         WantEnabled = state
+
         if state then
             StartProtection()
         else
@@ -842,10 +905,14 @@ ProtectTab:Toggle({
         end
     end
 })
--- ================== مضاد الفويد ==================
-local VoidEnabled = false
-local VoidDistance = 550     -- قوة/ارتفاع الصعود (ثابت)
-local TriggerDepth = 400     -- كم ستد تنزل تحت آخر أرضية قبل التفعيل (ثابت)
+
+--==================================================
+-- ANTI VOID
+--==================================================
+
+local VoidDistance = 550
+local TriggerDepth = 400
+
 local VoidConn
 local LastGroundY = nil
 local LastBoost = 0
@@ -855,52 +922,77 @@ local function StopVoid()
         VoidConn:Disconnect()
         VoidConn = nil
     end
+
     LastGroundY = nil
 end
 
 local function StartVoid()
     StopVoid()
+
     VoidConn = RunService.Heartbeat:Connect(function()
         local char = LocalPlayer.Character
+
         local root = char and char:FindFirstChild("HumanoidRootPart")
         local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if not root or not hum or hum.Health <= 0 then return end
 
-        -- تسجيل آخر ارتفاع وقفت عليه فعلاً
+        if not root or not hum or hum.Health <= 0 then
+            return
+        end
+
         if hum.FloorMaterial ~= Enum.Material.Air then
             LastGroundY = root.Position.Y
             return
         end
 
-        if not LastGroundY then return end
+        if not LastGroundY then
+            return
+        end
 
         local vel = root.AssemblyLinearVelocity
 
-        -- يتفعّل فقط إذا نزلت تحت آخر أرضية بـ TriggerDepth وأنت تسقط
-        if root.Position.Y > LastGroundY - TriggerDepth or vel.Y >= 0 then return end
+        if root.Position.Y > LastGroundY - TriggerDepth
+            or vel.Y >= 0 then
+            return
+        end
 
-        -- إذا فيه أرض قريبة تحتك لا يتدخل
         local params = RaycastParams.new()
         params.FilterType = Enum.RaycastFilterType.Exclude
-        params.FilterDescendantsInstances = { char }
-        local hit = Workspace:Raycast(root.Position, Vector3.new(0, -math.max(300, TriggerDepth), 0), params)
-        if hit then return end
+        params.FilterDescendantsInstances = {char}
 
-        -- مانع تكرار سريع
-        if os.clock() - LastBoost < 0.5 then return end
+        local hit = Workspace:Raycast(
+            root.Position,
+            Vector3.new(0, -math.max(300, TriggerDepth), 0),
+            params
+        )
+
+        if hit then
+            return
+        end
+
+        if os.clock() - LastBoost < 0.5 then
+            return
+        end
+
         LastBoost = os.clock()
 
-        local v = math.sqrt(2 * Workspace.Gravity * VoidDistance)
-        root.AssemblyLinearVelocity = Vector3.new(vel.X, v, vel.Z)
+        local v = math.sqrt(
+            2 * Workspace.Gravity * VoidDistance
+        )
+
+        root.AssemblyLinearVelocity = Vector3.new(
+            vel.X,
+            v,
+            vel.Z
+        )
     end)
 end
 
-ProtectTab:Toggle({
-    Title = "مضاد الفويد",
-    Desc = "يمنع موت في فويد",
+ProtectTab:AddToggle({
+    Name = "مضاد الفويد",
+    Description = "محاولة الرجوع للأعلى عند السقوط",
     Default = false,
+
     Callback = function(state)
-        VoidEnabled = state
         if state then
             StartVoid()
         else
@@ -909,20 +1001,24 @@ ProtectTab:Toggle({
     end
 })
 
--- ================== نو كليب للاعبين الآخرين ==================
+--==================================================
+-- ANTI FLING
+--==================================================
+
 local NoclipOthersEnabled = false
-local NoclipOthersGen = 0          -- يمنع تشغيل أكثر من حلقة في نفس الوقت
-local OthersOriginalCollide = {}   -- [BasePart] = CanCollide الأصلي
+local NoclipOthersGen = 0
+local OthersOriginalCollide = {}
 
 local function ApplyNoclipToOthers()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer and plr.Character then
-            for _, d in ipairs(plr.Character:GetDescendants()) do
-                if d:IsA("BasePart") then
-                    if OthersOriginalCollide[d] == nil then
-                        OthersOriginalCollide[d] = d.CanCollide
+            for _, part in ipairs(plr.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    if OthersOriginalCollide[part] == nil then
+                        OthersOriginalCollide[part] = part.CanCollide
                     end
-                    d.CanCollide = false
+
+                    part.CanCollide = false
                 end
             end
         end
@@ -931,45 +1027,52 @@ end
 
 local function RestoreOthers()
     for part, original in pairs(OthersOriginalCollide) do
-        if part.Parent then
+        if part and part.Parent then
             part.CanCollide = original
         end
     end
+
     table.clear(OthersOriginalCollide)
 end
 
 local function StartNoclipOthers()
-    NoclipOthersGen += 1
+    NoclipOthersGen = NoclipOthersGen + 1
+
     local gen = NoclipOthersGen
+
     task.spawn(function()
         while NoclipOthersEnabled and gen == NoclipOthersGen do
             ApplyNoclipToOthers()
             task.wait(0.3)
         end
+
         if gen == NoclipOthersGen then
             RestoreOthers()
         end
     end)
 end
 
-ProtectTab:Toggle({
-    Title = "مضاد فنق",
-    Desc = "ما يقدر يطيروك في جو",
+ProtectTab:AddToggle({
+    Name = "مضاد فنق",
+    Description = "تعطيل التصادم محلياً للشخصيات الأخرى",
     Default = false,
+
     Callback = function(state)
         NoclipOthersEnabled = state
+
         if state then
             StartNoclipOthers()
         else
-            NoclipOthersGen += 1
+            NoclipOthersGen = NoclipOthersGen + 1
             RestoreOthers()
         end
     end
 })
 
+--==================================================
+-- ANTI SIT
+--==================================================
 
--- ================== مضاد الجلوس ==================
-local AntiSitEnabled = false
 local AntiSitConn
 
 local function StopAntiSit()
@@ -977,20 +1080,34 @@ local function StopAntiSit()
         AntiSitConn:Disconnect()
         AntiSitConn = nil
     end
+
     local char = LocalPlayer.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
+
     if hum then
-        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        hum:SetStateEnabled(
+            Enum.HumanoidStateType.Seated,
+            true
+        )
     end
 end
 
 local function StartAntiSit()
     StopAntiSit()
+
     AntiSitConn = RunService.Heartbeat:Connect(function()
         local char = LocalPlayer.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if not hum then return end
-        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+        if not hum then
+            return
+        end
+
+        hum:SetStateEnabled(
+            Enum.HumanoidStateType.Seated,
+            false
+        )
+
         if hum.Sit then
             hum.Sit = false
             hum.Jump = true
@@ -998,12 +1115,12 @@ local function StartAntiSit()
     end)
 end
 
-ProtectTab:Toggle({
-    Title = "مضاد الجلوس",
-    Desc = "يمنع فنق جلوس",
+ProtectTab:AddToggle({
+    Name = "مضاد الجلوس",
+    Description = "منع حالة الجلوس",
     Default = false,
+
     Callback = function(state)
-        AntiSitEnabled = state
         if state then
             StartAntiSit()
         else
@@ -1011,3 +1128,9 @@ ProtectTab:Toggle({
         end
     end
 })
+
+--==================================================
+-- END PART 2
+--==================================================
+
+print("ALI SCRIPT - REDZ LIBRARY LOADED")
