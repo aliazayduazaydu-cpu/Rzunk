@@ -1,0 +1,442 @@
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+
+-- ================== الثيم ==================
+local themeName = "Purple"
+local ok = pcall(function()
+    WindUI:AddTheme({
+        Name = "Purple",
+        Accent = Color3.fromHex("#8B5CF6"),
+        Dialog = Color3.fromHex("#1E1433"),
+        Outline = Color3.fromHex("#A78BFA"),
+        Text = Color3.fromHex("#F5F3FF"),
+        Placeholder = Color3.fromHex("#C4B5FD"),
+        Background = Color3.fromHex("#140D26"),
+        Button = Color3.fromHex("#5B21B6"),
+        Icon = Color3.fromHex("#C4B5FD"),
+    })
+end)
+if not ok then
+    themeName = "Dark"
+end
+local Window = WindUI:CreateWindow({
+    Title = "سكربت ali",
+    Icon = "door-open",
+    Author = "by .مطور علاوي",
+    Folder = "ali_script",
+    Size = UDim2.fromOffset(580, 460),
+    MinSize = Vector2.new(560, 350),
+    MaxSize = Vector2.new(850, 560),
+    ToggleKey = Enum.KeyCode.RightShift,
+    Transparent = true,
+    Theme = themeName,
+    Resizable = true,
+    SideBarWidth = 200,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+    BackgroundImageTransparency = 0.42,
+})
+
+-- ---------- قائمة رائيسيه (أول تبويب) ----------
+local InfoTab = Window:Tab({
+    Title = "قائمة رائيسيه",
+    Icon = "bird",
+    Locked = false,
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[حسابي في روبلوكس hdjjlawe]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[حسابي في يوتيوب : مطور علاوي]],
+})
+
+InfoTab:Code({
+    Title = "Code",
+    Code = [[سكربت لكل مابات]],
+})
+-- ================== Copy Tools ==================
+local selectedName = nil
+
+local function copyToolsFrom(targetPlayer)
+    local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+    if not backpack or not targetPlayer then return 0 end
+
+    local count = 0
+    local sources = {}
+    if targetPlayer:FindFirstChildOfClass("Backpack") then
+        table.insert(sources, targetPlayer:FindFirstChildOfClass("Backpack"))
+    end
+    if targetPlayer.Character then
+        table.insert(sources, targetPlayer.Character)
+    end
+
+    for _, source in ipairs(sources) do
+        for _, item in ipairs(source:GetChildren()) do
+            if item:IsA("Tool") then
+                item:Clone().Parent = backpack
+                count += 1
+            end
+        end
+    end
+    return count
+end
+
+local function getPlayerNames()
+    local names = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            table.insert(names, p.Name)
+        end
+    end
+    return names
+end
+
+local CopyTab = Window:Tab({
+    Title = "قائمة نسخ ادوات",
+    Icon = "copy",
+    Locked = false,
+})
+
+CopyTab:Button({
+    Title = "Copy All Tools",
+    Desc = "نسخ أدوات جميع اللاعبين إلى حقيبتك",
+    Callback = function()
+        local total = 0
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer then
+                total += copyToolsFrom(p)
+            end
+        end
+        WindUI:Notify({
+            Title = "نسخ ادوات جميع لاعبين",
+            Content = "تم نسخ " .. total .. " أداة",
+            Duration = 3,
+        })
+    end,
+})
+
+local PlayerDropdown = CopyTab:Dropdown({
+    Title = "Select Player",
+    Desc = "اختر لاعب لنسخ أدواته",
+    Values = getPlayerNames(),
+    Value = nil,
+    Callback = function(value)
+        selectedName = value
+    end,
+})
+
+CopyTab:Button({
+    Title = "تحديث قائمة لاعبين",
+    Desc = "حته يضهر لاعبين جديدين",
+    Callback = function()
+        PlayerDropdown:Refresh(getPlayerNames())
+    end,
+})
+
+CopyTab:Button({
+    Title = "نسخ ادوات لاعب",
+    Desc = "نسخ أدوات اللاعب المختار فقط",
+    Callback = function()
+        if not selectedName then
+            WindUI:Notify({ Title = "خطأ", Content = "اختر لاعب أولاً", Duration = 3 })
+            return
+        end
+        local target = Players:FindFirstChild(selectedName)
+        if not target then
+            WindUI:Notify({ Title = "خطأ", Content = "اللاعب غير موجود", Duration = 3 })
+            return
+        end
+        local count = copyToolsFrom(target)
+        WindUI:Notify({
+            Title = "نسخ ادوات لاعب",
+            Content = "تم نسخ " .. count .. " أداة من " .. selectedName,
+            Duration = 3,
+        })
+    end,
+})
+
+--__________________________________________________________________
+--__________________________________________________________________
+--__________________________________________________________________
+
+
+local ProtectTab = Window:Tab({
+    Title = "قائمة مضادات",
+    Icon = "shield",
+    Locked = false,
+})
+
+-- ================== نظام عدم الموت ==================
+local WantEnabled = false
+local Active = false
+local Character, Humanoid, Shield, OriginalMaxHealth
+local Connections = {}
+local Original = {}
+
+local function Cleanup()
+    for _, c in ipairs(Connections) do
+        c:Disconnect()
+    end
+    table.clear(Connections)
+
+    for part, value in pairs(Original) do
+        if part.Parent then
+            part.CanTouch = value
+        end
+    end
+    table.clear(Original)
+
+    if Shield then
+        Shield:Destroy()
+        Shield = nil
+    end
+
+    if Humanoid and Humanoid.Parent and OriginalMaxHealth then
+        Humanoid.MaxHealth = OriginalMaxHealth
+    end
+    OriginalMaxHealth = nil
+    Active = false
+end
+
+local function ApplyTouch(obj)
+    if obj:IsA("BasePart") and Original[obj] == nil then
+        Original[obj] = obj.CanTouch
+        obj.CanTouch = false
+    end
+end
+
+local function StartProtection()
+    Cleanup()
+    if not Character or not Humanoid or Humanoid.Health <= 0 then
+        return
+    end
+
+    Active = true
+
+    Shield = Instance.new("ForceField")
+    Shield.Visible = true
+    Shield.Parent = Character
+
+    for _, desc in ipairs(Character:GetDescendants()) do
+        ApplyTouch(desc)
+    end
+    table.insert(Connections, Character.DescendantAdded:Connect(ApplyTouch))
+
+    OriginalMaxHealth = Humanoid.MaxHealth
+    Humanoid.MaxHealth = 1000000000
+    Humanoid.Health = Humanoid.MaxHealth
+
+    table.insert(Connections, Humanoid.HealthChanged:Connect(function(hp)
+        if Active and hp < Humanoid.MaxHealth then
+            Humanoid.Health = Humanoid.MaxHealth
+        end
+    end))
+end
+
+local function OnCharacter(char)
+    Cleanup()
+    Character = char
+    Humanoid = char:WaitForChild("Humanoid")
+
+    if WantEnabled then
+        StartProtection()
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(OnCharacter)
+if LocalPlayer.Character then
+    task.spawn(OnCharacter, LocalPlayer.Character)
+end
+
+-- ================== الزر ==================
+ProtectTab:Toggle({
+    Title = "مضاد الموت",
+    Desc = "ما يشتغل عند لاعبين",
+    Default = false,
+    Callback = function(state)
+        WantEnabled = state
+        if state then
+            StartProtection()
+        else
+            Cleanup()
+        end
+    end
+})
+-- ================== مضاد الفويد ==================
+local VoidEnabled = false
+local VoidDistance = 550     -- قوة/ارتفاع الصعود (ثابت)
+local TriggerDepth = 400     -- كم ستد تنزل تحت آخر أرضية قبل التفعيل (ثابت)
+local VoidConn
+local LastGroundY = nil
+local LastBoost = 0
+
+local function StopVoid()
+    if VoidConn then
+        VoidConn:Disconnect()
+        VoidConn = nil
+    end
+    LastGroundY = nil
+end
+
+local function StartVoid()
+    StopVoid()
+    VoidConn = RunService.Heartbeat:Connect(function()
+        local char = LocalPlayer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if not root or not hum or hum.Health <= 0 then return end
+
+        -- تسجيل آخر ارتفاع وقفت عليه فعلاً
+        if hum.FloorMaterial ~= Enum.Material.Air then
+            LastGroundY = root.Position.Y
+            return
+        end
+
+        if not LastGroundY then return end
+
+        local vel = root.AssemblyLinearVelocity
+
+        -- يتفعّل فقط إذا نزلت تحت آخر أرضية بـ TriggerDepth وأنت تسقط
+        if root.Position.Y > LastGroundY - TriggerDepth or vel.Y >= 0 then return end
+
+        -- إذا فيه أرض قريبة تحتك لا يتدخل
+        local params = RaycastParams.new()
+        params.FilterType = Enum.RaycastFilterType.Exclude
+        params.FilterDescendantsInstances = { char }
+        local hit = Workspace:Raycast(root.Position, Vector3.new(0, -math.max(300, TriggerDepth), 0), params)
+        if hit then return end
+
+        -- مانع تكرار سريع
+        if os.clock() - LastBoost < 0.5 then return end
+        LastBoost = os.clock()
+
+        local v = math.sqrt(2 * Workspace.Gravity * VoidDistance)
+        root.AssemblyLinearVelocity = Vector3.new(vel.X, v, vel.Z)
+    end)
+end
+
+ProtectTab:Toggle({
+    Title = "مضاد الفويد",
+    Desc = "يمنع موت في فويد",
+    Default = false,
+    Callback = function(state)
+        VoidEnabled = state
+        if state then
+            StartVoid()
+        else
+            StopVoid()
+        end
+    end
+})
+
+-- ================== نو كليب للاعبين الآخرين ==================
+local NoclipOthersEnabled = false
+local NoclipOthersGen = 0          -- يمنع تشغيل أكثر من حلقة في نفس الوقت
+local OthersOriginalCollide = {}   -- [BasePart] = CanCollide الأصلي
+
+local function ApplyNoclipToOthers()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            for _, d in ipairs(plr.Character:GetDescendants()) do
+                if d:IsA("BasePart") then
+                    if OthersOriginalCollide[d] == nil then
+                        OthersOriginalCollide[d] = d.CanCollide
+                    end
+                    d.CanCollide = false
+                end
+            end
+        end
+    end
+end
+
+local function RestoreOthers()
+    for part, original in pairs(OthersOriginalCollide) do
+        if part.Parent then
+            part.CanCollide = original
+        end
+    end
+    table.clear(OthersOriginalCollide)
+end
+
+local function StartNoclipOthers()
+    NoclipOthersGen += 1
+    local gen = NoclipOthersGen
+    task.spawn(function()
+        while NoclipOthersEnabled and gen == NoclipOthersGen do
+            ApplyNoclipToOthers()
+            task.wait(0.3)
+        end
+        if gen == NoclipOthersGen then
+            RestoreOthers()
+        end
+    end)
+end
+
+ProtectTab:Toggle({
+    Title = "مضاد فنق",
+    Desc = "ما يقدر يطيروك في جو",
+    Default = false,
+    Callback = function(state)
+        NoclipOthersEnabled = state
+        if state then
+            StartNoclipOthers()
+        else
+            NoclipOthersGen += 1
+            RestoreOthers()
+        end
+    end
+})
+
+
+-- ================== مضاد الجلوس ==================
+local AntiSitEnabled = false
+local AntiSitConn
+
+local function StopAntiSit()
+    if AntiSitConn then
+        AntiSitConn:Disconnect()
+        AntiSitConn = nil
+    end
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+    end
+end
+
+local function StartAntiSit()
+    StopAntiSit()
+    AntiSitConn = RunService.Heartbeat:Connect(function()
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if not hum then return end
+        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+        if hum.Sit then
+            hum.Sit = false
+            hum.Jump = true
+        end
+    end)
+end
+
+ProtectTab:Toggle({
+    Title = "مضاد الجلوس",
+    Desc = "يمنع فنق جلوس",
+    Default = false,
+    Callback = function(state)
+        AntiSitEnabled = state
+        if state then
+            StartAntiSit()
+        else
+            StopAntiSit()
+        end
+    end
+})
