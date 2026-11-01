@@ -373,7 +373,7 @@ local function StartNoclipOthers()
     task.spawn(function()
         while NoclipOthersEnabled and gen == NoclipOthersGen do
             ApplyNoclipToOthers()
-            task.wait(0.3)
+            task.wait(1)
         end
         if gen == NoclipOthersGen then
             RestoreOthers()
