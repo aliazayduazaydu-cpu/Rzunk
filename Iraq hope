@@ -1,190 +1,346 @@
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+--==================================================
+-- ALI SCRIPT - REDZ LIBRARY
+-- PART 1 / 3
+--==================================================
 
+-- SERVICES
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+
 local LocalPlayer = Players.LocalPlayer
 
--- ================== الثيم ==================
-local themeName = "Purple"
-local ok = pcall(function()
-    WindUI:AddTheme({
-        Name = "Purple",
-        Accent = Color3.fromHex("#8B5CF6"),
-        Dialog = Color3.fromHex("#1E1433"),
-        Outline = Color3.fromHex("#A78BFA"),
-        Text = Color3.fromHex("#F5F3FF"),
-        Placeholder = Color3.fromHex("#C4B5FD"),
-        Background = Color3.fromHex("#140D26"),
-        Button = Color3.fromHex("#5B21B6"),
-        Icon = Color3.fromHex("#C4B5FD"),
-    })
-end)
-if not ok then
-    themeName = "Dark"
-end
+--==================================================
+-- LOAD REDZ LIBRARY
+--==================================================
 
--- ================== المتغيرات ==================
+local redzlib = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"
+))()
+
+local Window = redzlib:MakeWindow({
+    Title = "سكربت ali",
+    SubTitle = "by .مطور علاوي",
+    SaveFolder = "AlawiHub"
+})
+
+Window:AddMinimizeButton({
+    Button = {
+        Image = "rbxassetid://11028318025",
+        BackgroundTransparency = 0
+    },
+    Corner = {
+        CornerRadius = UDim.new(35, 1)
+    }
+})
+
+--==================================================
+-- STATES
+--==================================================
+
 local State = {
-    ESPAll = false,
-    ESPSelected = false,
-    View = false,
     Speed = 16,
     SpeedOn = false,
+
     JumpPower = 50,
     JumpOn = false,
+
     Noclip = false,
     InfJump = false,
+
     ZeroG = false,
     ZeroGSpeed = 60,
+
     SelectedPlayer = nil,
+    ESPAll = false,
+    ESPSelected = false,
+    View = false
 }
 
 local RED = Color3.fromRGB(255, 0, 0)
+
 local ESPObjects = {}
-local ZeroGForce, ZeroGAtt
+
+local ZeroGForce
+local ZeroGAtt
 local ZeroGVel = Vector3.zero
-local touchInput = nil
-local touchPos = nil
+
+local touchInput
+local touchPos
 local touching = false
 
--- ================== دوال مساعدة ==================
+--==================================================
+-- HELPER FUNCTIONS
+--==================================================
+
 local function getChar()
     return LocalPlayer.Character
 end
 
 local function getHum()
-    local c = getChar()
-    return c and c:FindFirstChildOfClass("Humanoid")
+    local char = getChar()
+    return char and char:FindFirstChildOfClass("Humanoid")
 end
 
 local function getRoot()
-    local c = getChar()
-    return c and c:FindFirstChild("HumanoidRootPart")
+    local char = getChar()
+    return char and char:FindFirstChild("HumanoidRootPart")
 end
 
 local function getPlayerList()
     local list = {}
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer then
-            table.insert(list, p.Name)
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(list, player.Name)
         end
     end
+
+    table.sort(list)
+
     return list
 end
 
 local function getSelected()
-    return State.SelectedPlayer and Players:FindFirstChild(State.SelectedPlayer)
+    return State.SelectedPlayer
+        and Players:FindFirstChild(State.SelectedPlayer)
 end
 
--- ================== ESP (توهج أحمر + اسم) ==================
-local function clearESP(player)
-    local objs = ESPObjects[player]
-    if objs then
-        for _, o in ipairs(objs) do
-            if o then o:Destroy() end
+--==================================================
+-- MAIN TAB
+--==================================================
+
+local InfoTab = Window:MakeTab({
+    "قائمة رئيسية",
+    "home"
+})
+
+InfoTab:AddSection({
+    "معلومات المطور"
+})
+
+InfoTab:AddParagraph({
+    "حساب روبلوكس",
+    "hdjjlawe"
+})
+
+InfoTab:AddParagraph({
+    "حساب يوتيوب",
+    "مطور علاوي"
+})
+
+InfoTab:AddParagraph({
+    "معلومات السكربت",
+    "سكربت لجميع المابات"
+})
+
+--==================================================
+-- ABILITIES TAB
+--==================================================
+
+local MainTab = Window:MakeTab({
+    "قدرات",
+    "zap"
+})
+
+MainTab:AddSection({
+    "السرعة والقفز"
+})
+
+-- SPEED INPUT
+MainTab:AddTextBox({
+    Name = "سرعة المشي",
+    Description = "اكتب سرعة المشي",
+    PlaceholderText = "16",
+
+    Callback = function(value)
+        local number = tonumber(value)
+
+        if number then
+            State.Speed = math.clamp(number, 1, 2500)
         end
     end
-    ESPObjects[player] = nil
-end
+})
 
-local function shouldESP(player)
-    if State.ESPAll then return true end
-    return State.ESPSelected and State.SelectedPlayer == player.Name
-end
+-- SPEED TOGGLE
+MainTab:AddToggle({
+    Name = "تشغيل السرعة",
+    Default = false,
 
-local function applyESP(player)
-    clearESP(player)
-    if player == LocalPlayer or not shouldESP(player) then return end
-    local char = player.Character
-    if not char then return end
+    Callback = function(value)
+        State.SpeedOn = value
 
-    local objs = {}
-
-    local hl = Instance.new("Highlight")
-    hl.FillColor = RED
-    hl.OutlineColor = RED
-    hl.FillTransparency = 0.5
-    hl.OutlineTransparency = 0
-    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    hl.Adornee = char
-    hl.Parent = char
-    table.insert(objs, hl)
-
-    local head = char:FindFirstChild("Head")
-    if head then
-        local bb = Instance.new("BillboardGui")
-        bb.Size = UDim2.fromOffset(140, 30)
-        bb.StudsOffset = Vector3.new(0, 2.5, 0)
-        bb.AlwaysOnTop = true
-        bb.Adornee = head
-        bb.Parent = head
-
-        local tl = Instance.new("TextLabel")
-        tl.Size = UDim2.fromScale(1, 1)
-        tl.BackgroundTransparency = 1
-        tl.TextColor3 = RED
-        tl.TextStrokeTransparency = 0
-        tl.Font = Enum.Font.GothamBold
-        tl.TextScaled = true
-        tl.Text = player.Name
-        tl.Parent = bb
-        table.insert(objs, bb)
+        if not value then
+            local hum = getHum()
+            if hum then
+                hum.WalkSpeed = 16
+            end
+        end
     end
+})
 
-    ESPObjects[player] = objs
-end
+-- JUMP INPUT
+MainTab:AddTextBox({
+    Name = "قوة القفز",
+    Description = "اكتب قوة القفز",
+    PlaceholderText = "50",
 
-local function refreshAllESP()
-    for _, p in ipairs(Players:GetPlayers()) do
-        applyESP(p)
+    Callback = function(value)
+        local number = tonumber(value)
+
+        if number then
+            State.JumpPower = math.clamp(number, 1, 3000)
+        end
     end
-end
+})
 
-local function hookPlayer(p)
-    p.CharacterAdded:Connect(function()
-        task.wait(0.5)
-        applyESP(p)
-    end)
-end
+-- JUMP TOGGLE
+MainTab:AddToggle({
+    Name = "تشغيل القفز",
+    Default = false,
 
-for _, p in ipairs(Players:GetPlayers()) do
-    hookPlayer(p)
-end
-Players.PlayerAdded:Connect(hookPlayer)
-Players.PlayerRemoving:Connect(function(p)
-    clearESP(p)
-end)
+    Callback = function(value)
+        State.JumpOn = value
 
--- ================== View ==================
-local function setView(on)
-    local cam = Workspace.CurrentCamera
-    local target = on and getSelected()
-    local hum = target and target.Character and target.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        cam.CameraSubject = hum
+        if not value then
+            local hum = getHum()
+
+            if hum then
+                hum.UseJumpPower = true
+                hum.JumpPower = 50
+            end
+        end
+    end
+})
+
+--==================================================
+-- MOVEMENT
+--==================================================
+
+MainTab:AddSection({
+    "الحركة"
+})
+
+-- NOCLIP
+MainTab:AddToggle({
+    Name = "اختراق الجدران",
+    Default = false,
+
+    Callback = function(value)
+        State.Noclip = value
+
+        if not value then
+            local char = getChar()
+
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = true
+                    end
+                end
+            end
+        end
+    end
+})
+
+-- INFINITE JUMP
+MainTab:AddToggle({
+    Name = "قفز لا نهائي",
+    Default = false,
+
+    Callback = function(value)
+        State.InfJump = value
+    end
+})
+
+--==================================================
+-- ZERO GRAVITY
+--==================================================
+
+MainTab:AddSection({
+    "الجاذبية والطيران"
+})
+
+local function setZeroG(on)
+    State.ZeroG = on
+
+    local root = getRoot()
+    local hum = getHum()
+
+    if on and root and hum then
+
+        hum.PlatformStand = true
+
+        ZeroGAtt = Instance.new("Attachment")
+        ZeroGAtt.Parent = root
+
+        ZeroGForce = Instance.new("VectorForce")
+        ZeroGForce.Attachment0 = ZeroGAtt
+        ZeroGForce.RelativeTo = Enum.ActuatorRelativeTo.World
+
+        ZeroGForce.Force = Vector3.new(
+            0,
+            Workspace.Gravity * root.AssemblyMass,
+            0
+        )
+
+        ZeroGForce.Parent = root
+
     else
-        local myHum = getHum()
-        if myHum then cam.CameraSubject = myHum end
+
+        if ZeroGForce then
+            ZeroGForce:Destroy()
+            ZeroGForce = nil
+        end
+
+        if ZeroGAtt then
+            ZeroGAtt:Destroy()
+            ZeroGAtt = nil
+        end
+
+        ZeroGVel = Vector3.zero
+        touching = false
+
+        if hum then
+            hum.PlatformStand = false
+        end
     end
 end
 
--- ================== Teleport ==================
-local function teleportToSelected()
-    local target = getSelected()
-    local myRoot = getRoot()
-    local troot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-    if myRoot and troot then
-        myRoot.CFrame = troot.CFrame + Vector3.new(0, 3, 0)
-    end
-end
+MainTab:AddToggle({
+    Name = "جاذبية صفر / طيران",
+    Default = false,
 
--- ================== Zero Gravity (طيران نحو نقطة تحددها الكاميرا) ==================
+    Callback = function(value)
+        setZeroG(value)
+    end
+})
+
+MainTab:AddTextBox({
+    Name = "سرعة الطيران",
+    Description = "سرعة الحركة أثناء الطيران",
+    PlaceholderText = "60",
+
+    Callback = function(value)
+        local number = tonumber(value)
+
+        if number then
+            State.ZeroGSpeed = math.clamp(number, 1, 500)
+        end
+    end
+})
+
+--==================================================
+-- TOUCH INPUT
+--==================================================
+
 UserInputService.InputBegan:Connect(function(input, gp)
     if not State.ZeroG then return end
+
     if input.UserInputType == Enum.UserInputType.Touch
         or input.UserInputType == Enum.UserInputType.MouseButton1 then
+
         touchInput = input
         touchPos = input.Position
         touching = true
@@ -205,65 +361,54 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
-local function setZeroG(on)
-    State.ZeroG = on
-    local root, hum = getRoot(), getHum()
+--==================================================
+-- NOCLIP LOOP
+--==================================================
 
-    if on and root and hum then
-        hum.PlatformStand = true
-
-        ZeroGAtt = Instance.new("Attachment")
-        ZeroGAtt.Parent = root
-
-        ZeroGForce = Instance.new("VectorForce")
-        ZeroGForce.Attachment0 = ZeroGAtt
-        ZeroGForce.RelativeTo = Enum.ActuatorRelativeTo.World
-        ZeroGForce.Force = Vector3.new(0, Workspace.Gravity * root.AssemblyMass, 0)
-        ZeroGForce.Parent = root
-    else
-        if ZeroGForce then ZeroGForce:Destroy() ZeroGForce = nil end
-        if ZeroGAtt then ZeroGAtt:Destroy() ZeroGAtt = nil end
-        ZeroGVel = Vector3.zero
-        touching = false
-        if hum then hum.PlatformStand = false end
-    end
-end
-
-LocalPlayer.CharacterAdded:Connect(function()
-    if State.ZeroG then
-        task.wait(1)
-        setZeroG(true)
-    end
-end)
-
--- ================== Noclip ==================
 RunService.Stepped:Connect(function()
-    if State.Noclip and getChar() then
-        for _, part in ipairs(getChar():GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
+    if State.Noclip then
+        local char = getChar()
+
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
             end
         end
     end
 end)
 
--- ================== Infinity Jump ==================
+--==================================================
+-- INFINITE JUMP
+--==================================================
+
 UserInputService.JumpRequest:Connect(function()
     if State.InfJump then
         local hum = getHum()
+
         if hum then
-            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            hum:ChangeState(
+                Enum.HumanoidStateType.Jumping
+            )
         end
     end
 end)
 
--- ================== Heartbeat: سرعة + قفز + جاذبية صفر ==================
+--==================================================
+-- HEARTBEAT
+--==================================================
+
 RunService.Heartbeat:Connect(function(dt)
+
     local hum = getHum()
+
     if hum then
+
         if State.SpeedOn then
             hum.WalkSpeed = State.Speed
         end
+
         if State.JumpOn then
             hum.UseJumpPower = true
             hum.JumpPower = State.JumpPower
@@ -271,315 +416,796 @@ RunService.Heartbeat:Connect(function(dt)
     end
 
     if State.ZeroG then
+
         local root = getRoot()
         local cam = Workspace.CurrentCamera
+
         if root and cam then
+
             local target = Vector3.zero
 
             if touching and touchPos then
-                local ray = cam:ViewportPointToRay(touchPos.X, touchPos.Y)
+
+                local ray = cam:ViewportPointToRay(
+                    touchPos.X,
+                    touchPos.Y
+                )
 
                 local params = RaycastParams.new()
-                params.FilterType = Enum.RaycastFilterType.Exclude
-                params.FilterDescendantsInstances = {getChar()}
 
-                local hit = Workspace:Raycast(ray.Origin, ray.Direction * 500, params)
-                local dest = hit and hit.Position or (ray.Origin + ray.Direction * 200)
+                params.FilterType =
+                    Enum.RaycastFilterType.Exclude
 
-                local diff = dest - root.Position
+                params.FilterDescendantsInstances = {
+                    getChar()
+                }
+
+                local hit = Workspace:Raycast(
+                    ray.Origin,
+                    ray.Direction * 500,
+                    params
+                )
+
+                local destination = hit
+                    and hit.Position
+                    or (ray.Origin + ray.Direction * 200)
+
+                local diff = destination - root.Position
+
                 if diff.Magnitude > 4 then
                     target = diff.Unit * State.ZeroGSpeed
                 end
             end
 
-            ZeroGVel = ZeroGVel:Lerp(target, math.clamp(dt * 6, 0, 1))
+            ZeroGVel = ZeroGVel:Lerp(
+                target,
+                math.clamp(dt * 6, 0, 1)
+            )
+
             root.AssemblyLinearVelocity = ZeroGVel
         end
     end
 end)
 
--- ================== واجهة WindUI ==================
-local Window = WindUI:CreateWindow({
-    Title = "سكربت ali",
-    Icon = "door-open",
-    Author = "by .مطور علاوي",
-    Folder = "ali_script",
-    Size = UDim2.fromOffset(580, 460),
-    MinSize = Vector2.new(560, 350),
-    MaxSize = Vector2.new(850, 560),
-    ToggleKey = Enum.KeyCode.RightShift,
-    Transparent = true,
-    Theme = themeName,
-    Resizable = true,
-    SideBarWidth = 200,
-    HideSearchBar = true,
-    ScrollBarEnabled = false,
-    BackgroundImageTransparency = 0.42,
+--==================================================
+-- CHARACTER RESPAWN
+--==================================================
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+
+    if State.ZeroG then
+        setZeroG(true)
+    end
+end)
+
+--==================================================
+-- END PART 1
+--==================================================
+--==================================================
+-- ALI SCRIPT - REDZ LIBRARY
+-- PART 2 / 3
+--==================================================
+
+--==================================================
+-- PLAYER TARGETING
+--==================================================
+
+local PlayersTab = Window:MakeTab({
+    "استهداف",
+    "users"
 })
 
--- ---------- قائمة رائيسيه (أول تبويب) ----------
-local InfoTab = Window:Tab({
-    Title = "قائمة رائيسيه",
-    Icon = "bird",
-    Locked = false,
+local function getPlayerNames()
+    local names = {}
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(names, player.Name)
+        end
+    end
+
+    table.sort(names)
+    return names
+end
+
+local function getSelectedPlayer()
+    if not State.SelectedPlayer then
+        return nil
+    end
+
+    return Players:FindFirstChild(State.SelectedPlayer)
+end
+
+--==================================================
+-- ESP SYSTEM
+--==================================================
+
+local ESPObjects = {}
+
+local function clearESP(player)
+    local objects = ESPObjects[player]
+
+    if objects then
+        for _, object in ipairs(objects) do
+            if object and object.Parent then
+                object:Destroy()
+            end
+        end
+    end
+
+    ESPObjects[player] = nil
+end
+
+local function shouldESP(player)
+    if State.ESPAll then
+        return true
+    end
+
+    if State.ESPSelected
+        and State.SelectedPlayer == player.Name then
+        return true
+    end
+
+    return false
+end
+
+local function applyESP(player)
+    clearESP(player)
+
+    if player == LocalPlayer then
+        return
+    end
+
+    if not shouldESP(player) then
+        return
+    end
+
+    local char = player.Character
+    if not char then return end
+
+    local objects = {}
+
+    local highlight = Instance.new("Highlight")
+    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Adornee = char
+    highlight.Parent = char
+
+    table.insert(objects, highlight)
+
+    local head = char:FindFirstChild("Head")
+
+    if head then
+        local billboard = Instance.new("BillboardGui")
+
+        billboard.Size = UDim2.fromOffset(140, 30)
+        billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Adornee = head
+        billboard.Parent = head
+
+        local label = Instance.new("TextLabel")
+
+        label.Size = UDim2.fromScale(1, 1)
+        label.BackgroundTransparency = 1
+        label.TextColor3 = Color3.fromRGB(255, 0, 0)
+        label.TextStrokeTransparency = 0
+        label.Font = Enum.Font.GothamBold
+        label.TextScaled = true
+        label.Text = player.Name
+        label.Parent = billboard
+
+        table.insert(objects, billboard)
+    end
+
+    ESPObjects[player] = objects
+end
+
+local function refreshAllESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        applyESP(player)
+    end
+end
+
+local function hookPlayer(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        applyESP(player)
+    end)
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+    hookPlayer(player)
+end
+
+Players.PlayerAdded:Connect(function(player)
+    hookPlayer(player)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    clearESP(player)
+end)
+
+--==================================================
+-- PLAYER DROPDOWN
+--==================================================
+
+PlayersTab:AddSection({
+    "اختيار لاعب"
 })
 
-InfoTab:Code({
-    Title = "Code",
-    Code = [[حسابي في روبلوكس hdjjlawe]],
+local PlayerDropdown = PlayersTab:AddDropdown({
+    Name = "اختر لاعب",
+    Description = "حدد اللاعب المستهدف",
+    Options = getPlayerNames(),
+    Default = nil,
+
+    Callback = function(value)
+        State.SelectedPlayer = value
+
+        if State.ESPSelected then
+            refreshAllESP()
+        end
+
+        if State.View then
+            local target = getSelectedPlayer()
+            local hum = target
+                and target.Character
+                and target.Character:FindFirstChildOfClass("Humanoid")
+
+            if hum then
+                Workspace.CurrentCamera.CameraSubject = hum
+            end
+        end
+    end
 })
 
-InfoTab:Code({
-    Title = "Code",
-    Code = [[حسابي في يوتيوب : مطور علاوي]],
-})
+PlayersTab:AddButton({
+    Name = "تحديث قائمة اللاعبين",
 
-InfoTab:Code({
-    Title = "Code",
-    Code = [[سكربت لكل مابات مهما كان]],
-})
-
--- ---------- تبويب الميزات ----------
-local MainTab = Window:Tab({
-    Title = "قدرات",
-    Icon = "wrench",
-    Locked = false,
-})
-
-MainTab:Input({
-    Title = "سرعة المشي",
-    Placeholder = "16",
-    Callback = function(txt)
-        local n = tonumber(txt)
-        if n then State.Speed = n end
-    end,
-})
-
-MainTab:Toggle({
-    Title = "تشغيل السرعة",
-    Default = false,
-    Callback = function(v) State.SpeedOn = v end,
-})
-
-MainTab:Input({
-    Title = "قوة القفز",
-    Placeholder = "50",
-    Callback = function(txt)
-        local n = tonumber(txt)
-        if n then State.JumpPower = n end
-    end,
-})
-
-MainTab:Toggle({
-    Title = "تشغيل القفز",
-    Default = false,
-    Callback = function(v) State.JumpOn = v end,
-})
-
-MainTab:Toggle({
-    Title = "اختراق جدران",
-    Default = false,
-    Callback = function(v) State.Noclip = v end,
-})
-
-MainTab:Toggle({
-    Title = "قفز لا نهائي",
-    Default = false,
-    Callback = function(v) State.InfJump = v end,
-})
-
-MainTab:Toggle({
-    Title = "جاذبية صفر / طيران",
-    Desc = "(اضغط مطولاً على الشاشة للطيران نحو المكان)",
-    Default = false,
-    Callback = function(v) setZeroG(v) end,
-})
-
-MainTab:Input({
-    Title = "سرعه طيران جاذبيه",
-    Placeholder = "60",
-    Callback = function(txt)
-        local n = tonumber(txt)
-        if n then State.ZeroGSpeed = n end
-    end,
-})
-
--- ---------- تبويب اللاعبين ----------
-local PlayersTab = Window:Tab({
-    Title = "استهداف",
-    Icon = "users",
-    Locked = false,
-})
-
-local PlayerDropdown = PlayersTab:Dropdown({
-    Title = "اختر لاعب",
-    Values = getPlayerList(),
-    Value = nil,
-    Callback = function(name)
-        State.SelectedPlayer = name
-        if State.ESPSelected then refreshAllESP() end
-        if State.View then setView(true) end
-    end,
+    Callback = function()
+        PlayerDropdown:Refresh(getPlayerNames())
+    end
 })
 
 Players.PlayerAdded:Connect(function()
-    PlayerDropdown:Refresh(getPlayerList())
+    task.wait(0.3)
+    PlayerDropdown:Refresh(getPlayerNames())
 end)
+
 Players.PlayerRemoving:Connect(function()
-    task.wait()
-    PlayerDropdown:Refresh(getPlayerList())
+    task.wait(0.3)
+    PlayerDropdown:Refresh(getPlayerNames())
 end)
 
-PlayersTab:Toggle({
-    Title = "كشف كل",
+--==================================================
+-- ESP BUTTONS
+--==================================================
+
+PlayersTab:AddSection({
+    "كشف اللاعبين"
+})
+
+PlayersTab:AddToggle({
+    Name = "كشف جميع اللاعبين",
     Default = false,
-    Callback = function(v)
-        State.ESPAll = v
+
+    Callback = function(value)
+        State.ESPAll = value
         refreshAllESP()
-    end,
+    end
 })
 
-PlayersTab:Toggle({
-    Title = "كشف لاعب",
+PlayersTab:AddToggle({
+    Name = "كشف اللاعب المحدد",
     Default = false,
-    Callback = function(v)
-        State.ESPSelected = v
+
+    Callback = function(value)
+        State.ESPSelected = value
         refreshAllESP()
-    end,
+    end
 })
 
-PlayersTab:Toggle({
-    Title = "مشاهدة لاعب",
+--==================================================
+-- VIEW PLAYER
+--==================================================
+
+PlayersTab:AddToggle({
+    Name = "مشاهدة لاعب",
     Default = false,
-    Callback = function(v)
-        State.View = v
-        setView(v)
-    end,
+
+    Callback = function(value)
+        State.View = value
+
+        local camera = Workspace.CurrentCamera
+
+        if value then
+            local target = getSelectedPlayer()
+
+            local hum = target
+                and target.Character
+                and target.Character:FindFirstChildOfClass("Humanoid")
+
+            if hum then
+                camera.CameraSubject = hum
+            end
+        else
+            local myHum = getHum()
+
+            if myHum then
+                camera.CameraSubject = myHum
+            end
+        end
+    end
 })
 
-PlayersTab:Toggle({
-    Title = "انتقال الى لاعب",
-    Default = false,
-    Callback = function(v)
-        if v then teleportToSelected() end
-    end,
-})
--- ================== سكنات ==================
-local InfoTab = Window:Tab({
-    Title = "قائمة سكنات",
-    Icon = "code",
-    Locked = false,
-})
+--==================================================
+-- TELEPORT TO PLAYER
+--==================================================
 
-InfoTab:Code({
-    Title = "طفل",
-    Code = [[ehhehe7373]],
-})
+PlayersTab:AddButton({
+    Name = "انتقال إلى لاعب",
 
-InfoTab:Code({
-    Title = "طفل",
-    Code = [[m1234med]],
+    Callback = function()
+        local target = getSelectedPlayer()
+        local myRoot = getRoot()
+
+        local targetRoot = target
+            and target.Character
+            and target.Character:FindFirstChild("HumanoidRootPart")
+
+        if myRoot and targetRoot then
+            myRoot.CFrame =
+                targetRoot.CFrame + Vector3.new(0, 3, 0)
+        end
+    end
 })
 
-InfoTab:Code({
-    Title = "بنت",
-    Code = [[me70036]],
+--==================================================
+-- SKINS TAB
+--==================================================
+
+local SkinsTab = Window:MakeTab({
+    "قائمة سكنات",
+    "shirt"
 })
 
-InfoTab:Code({
-    Title = "ام طيز",
-    Code = [[angie_pro02]],
+SkinsTab:AddSection({
+    "أسماء السكنات"
 })
 
-InfoTab:Code({
-    Title = "عشوائي",
-    Code = [[sr_potato77777777777]],
+local Skins = {
+    {"طفل", "ehhehe7373"},
+    {"طفل", "m1234med"},
+    {"بنت", "me70036"},
+    {"ام طيز", "angie_pro02"},
+    {"عشوائي", "sr_potato77777777777"},
+    {"جبس", "diva_np1"},
+    {"عشوائي", "ABN_KRBALA"},
+    {"اسود", "pf_er1"},
+    {"ايمو", "6zl81"},
+    {"ابن سكونا", "DARVENYER"},
+    {"الي يصلي", "u6_9u"},
+    {"عشوائي", "Breadtgb"},
+    {"صغير", "Egoo2929"},
+    {"عشوائي", "mmmm200848"},
+    {"شرطي", "ehheje7373"},
+    {"عشوائي", "ben10k505"},
+    {"عشوائي", "k11l96x"},
+    {"عشوائي", "q_s6r"},
+    {"عشوائي", "romarqas"},
+    {"عشوائي", "echowithme"},
+    {"عشوائي", "gangnyu"}
+}
+
+for _, skin in ipairs(Skins) do
+    SkinsTab:AddTextBox({
+        Name = skin[1],
+        Description = "اسم الحساب",
+        PlaceholderText = skin[2],
+
+        Callback = function(value)
+            if value == "" then
+                return
+            end
+
+            if setclipboard then
+                setclipboard(value)
+            end
+        end
+    })
+end
+
+--==================================================
+-- FLOAT SYSTEM
+--==================================================
+
+local FloatTab = Window:MakeTab({
+    "قائمة اختفاء",
+    "cloud"
 })
 
-InfoTab:Code({
-    Title = "جبس",
-    Code = [[diva_np1]],
-})
+local MAX_DISTANCE = 300
+local MAX_SPEED = 500
 
-InfoTab:Code({
-    Title = "عشوائي",
-    Code = [[ABN_KRBALA]],
-})
+local distance = 30
+local speed = 16
 
-InfoTab:Code({
-    Title = "اسود",
-    Code = [[pf_er1]],
-})
+local JUMP_HEIGHT = 4
+local JUMP_RECOVER = 12
+local FALL_SPEED = 60
+local ASCEND_SPEED = 4000
 
-InfoTab:Code({
-    Title = "ايمو",
-    Code = [[6zl81]],
-})
+local MARKER_SIZE = Vector3.new(8, 0.5, 8)
+local STEP_HEIGHT = 15
+local COLUMN_SIZE = Vector3.new(8, 40, 8)
 
-InfoTab:Code({
-    Title = "ابن سكونا",
-    Code = [[DARVENYER]],
-})
+local floatOn = false
+local rising = false
+local teleportOn = false
 
-InfoTab:Code({
-    Title = "الي يصلي",
-    Code = [[u6_9u]],
-})
+local baseY = 0
+local markerX, markerY, markerZ = 0, 0, 0
+local rootY, targetRootY = 0, 0
+local jumpOffset = 0
 
-InfoTab:Code({
-    Title = "عشوائي",
-    Code = [[Breadtgb]],
-})
+local character
+local humanoid
+local root
 
-InfoTab:Code({
-    Title = "صغير",
-    Code = [[Egoo2929]],
-})
+local marker
+local savedCollide = {}
 
-InfoTab:Code({
-    Title = "عشوائي",
-    Code = [[mmmm200848]],
-})
+local updatingUI = false
 
-InfoTab:Code({
-    Title = "شرطي",
-    Code = [[ehheje7373]],
-})
+local rayParams = RaycastParams.new()
+rayParams.FilterType = Enum.RaycastFilterType.Exclude
 
-InfoTab:Code({
-    Title = "عشوائي",
-    Code = [[ben10k505]],
-})
+local overlapParams = OverlapParams.new()
+overlapParams.FilterType = Enum.RaycastFilterType.Exclude
 
-InfoTab:Code({
-    Title = "عشوائي",
-    Code = [[k11l96x]],
-})
+--==================================================
+-- FLOAT MARKER
+--==================================================
 
-InfoTab:Code({
-    Title = "عشوائي",
-    Code = [[q_s6r]],
-})
+local function createMarker()
+    if marker then
+        marker:Destroy()
+    end
 
-InfoTab:Code({
-    Title = "عشوائي",
-    Code = [[romarqas]],
-})
+    marker = Instance.new("Part")
+    marker.Name = "AliFloatMarker"
+    marker.Anchored = true
+    marker.CanCollide = false
+    marker.CanQuery = false
+    marker.CanTouch = false
+    marker.Material = Enum.Material.Neon
+    marker.Color = Color3.fromRGB(255, 0, 0)
+    marker.Transparency = 0
+    marker.Size = MARKER_SIZE
 
-InfoTab:Code({
-    Title = "عشوائي",
-    Code = [[echowithme]],
-})
+    marker.CFrame = CFrame.new(
+        markerX,
+        markerY,
+        markerZ
+    )
 
-InfoTab:Code({
-    Title = "عشوائي",
-    Code = [[gangnyu]],
-})
+    marker.Parent = Workspace
 
---__________________________________________________________________
---__________________________________________________________________
+    rayParams.FilterDescendantsInstances = {
+        character,
+        marker
+    }
 
+    overlapParams.FilterDescendantsInstances = {
+        character,
+        marker
+    }
+end
 
+local function removeMarker()
+    if marker then
+        marker:Destroy()
+        marker = nil
+    end
+end
+
+--==================================================
+-- COLLISION
+--==================================================
+
+local function disableFloatCollide()
+    if not character then return end
+
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+
+            if savedCollide[part] == nil then
+                savedCollide[part] = part.CanCollide
+            end
+
+            part.CanCollide = false
+        end
+    end
+end
+
+local function restoreFloatCollide()
+    for part, original in pairs(savedCollide) do
+        if part and part.Parent then
+            part.CanCollide = original
+        end
+    end
+
+    savedCollide = {}
+end
+
+--==================================================
+-- CAMERA
+--==================================================
+
+local function setFloatCamera(on)
+    local cam = Workspace.CurrentCamera
+
+    if not cam then return end
+
+    cam.CameraType = Enum.CameraType.Custom
+
+    if on and marker then
+        cam.CameraSubject = marker
+    elseif humanoid then
+        cam.CameraSubject = humanoid
+    end
+end
+
+--==================================================
+-- GROUND DETECTION
+--==================================================
+
+local function probeTop(x, z)
+    local result = Workspace:Blockcast(
+        CFrame.new(x, markerY + 1, z),
+        MARKER_SIZE,
+        Vector3.new(0, -600, 0),
+        rayParams
+    )
+
+    if result then
+        return result.Position.Y
+    end
+
+    return -math.huge
+end
+
+local function blockingTop(x, z)
+    local parts = Workspace:GetPartBoundsInBox(
+        CFrame.new(x, markerY + 20.5, z),
+        COLUMN_SIZE,
+        overlapParams
+    )
+
+    local highest = nil
+
+    for _, part in ipairs(parts) do
+        if part.CanCollide then
+            local top = part.Position.Y + part.Size.Y / 2
+
+            if not highest or top > highest then
+                highest = top
+            end
+        end
+    end
+
+    return highest
+end
+
+--==================================================
+-- MARKER MOVEMENT
+--==================================================
+
+local function tryMove(delta)
+    local nx = markerX + delta.X
+    local nz = markerZ + delta.Z
+
+    local top = blockingTop(nx, nz)
+
+    if not top or top <= markerY + 0.5 then
+        markerX = nx
+        markerZ = nz
+        return
+    end
+
+    if top - markerY <= STEP_HEIGHT then
+        markerX = nx
+        markerZ = nz
+        markerY = top + MARKER_SIZE.Y / 2
+    end
+end
+
+--==================================================
+-- TELEPORT MARKER
+--==================================================
+
+local function floatTeleportTo(screenX, screenY)
+    if not floatOn or not marker then
+        return
+    end
+
+    local cam = Workspace.CurrentCamera
+    local ray = cam:ViewportPointToRay(screenX, screenY)
+
+    local hit = Workspace:Raycast(
+        ray.Origin,
+        ray.Direction * 2000,
+        rayParams
+    )
+
+    if not hit then return end
+
+    markerX = hit.Position.X
+    markerZ = hit.Position.Z
+    markerY = hit.Position.Y + MARKER_SIZE.Y / 2
+
+    jumpOffset = 0
+end
+
+--==================================================
+-- START FLOAT
+--==================================================
+
+local function startFloat()
+    if floatOn or rising or not root or not humanoid then
+        return
+    end
+
+    local torso =
+        character:FindFirstChild("UpperTorso")
+        or character:FindFirstChild("Torso")
+
+    local spawnPos = torso and torso.Position or root.Position
+
+    baseY = root.Position.Y
+
+    markerX = spawnPos.X
+    markerY = baseY
+    markerZ = spawnPos.Z
+
+    jumpOffset = 0
+    floatOn = true
+
+    humanoid.PlatformStand = true
+
+    disableFloatCollide()
+    createMarker()
+
+    local cf = root.CFrame
+
+    root.CFrame =
+        CFrame.new(
+            markerX,
+            markerY - distance,
+            markerZ
+        ) * (cf - cf.Position)
+
+    root.AssemblyLinearVelocity = Vector3.zero
+    root.AssemblyAngularVelocity = Vector3.zero
+
+    setFloatCamera(true)
+end
+
+--==================================================
+-- STOP FLOAT
+--==================================================
+
+local function stopFloat()
+    if not floatOn or not root then
+        return
+    end
+
+    floatOn = false
+    rising = true
+
+    jumpOffset = 0
+    rootY = root.Position.Y
+
+    targetRootY = math.max(
+        baseY,
+        probeTop(markerX, markerZ) + 3
+    )
+end
+
+--==================================================
+-- FINISH RISING
+--==================================================
+
+local function finishRise()
+    rising = false
+    jumpOffset = 0
+
+    restoreFloatCollide()
+
+    if humanoid then
+        humanoid.PlatformStand = false
+
+        humanoid:ChangeState(
+            Enum.HumanoidStateType.GettingUp
+        )
+    end
+
+    removeMarker()
+    setFloatCamera(false)
+end
+
+--==================================================
+-- TOUCH TELEPORT
+--==================================================
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed or not teleportOn then
+        return
+    end
+
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        floatTeleportTo(
+            input.Position.X,
+            input.Position.Y
+        )
+    end
+end)
+
+--==================================================
+-- FLOAT JUMP
+--==================================================
+
+UserInputService.JumpRequest:Connect(function()
+    if floatOn then
+        jumpOffset = JUMP_HEIGHT
+    end
+end)
+
+--==================================================
+-- FLOAT COLLISION UPDATE
+--==================================================
+
+RunService.Stepped:Connect(function()
+    if floatOn or rising then
+        disableFloatCollide()
+    end
+end)
+
+--==================================================
+-- FLOAT MOVEMENT UPDATE
+--==================================================
+
+RunService.RenderStepped:Connect(function(dt)
+    if not character or not root or not humanoid then
+        return
+    end
+
+    if not (floatOn or rising) then
+        return
+    end
+
+    local cf = root.CFrame
+    local rot = cf - cf.Position
+
+    if floatOn then
+
+        local delta = humanoid.MoveDirection * speed * dt
+
+        if delta.Magnitude > 0 then
+            tryMove(delta)
+        end
+
+        local top = probeTop(markerX, markerZ)
+        local target = math.max(baseY, top)
+
+        if target > markerY then
             markerY = target
         else
             markerY = math.max(
@@ -625,11 +1251,8 @@ InfoTab:Code({
             targetRootY
         )
 
-        root.CFrame = CFrame.new(
-            markerX,
-            rootY,
-            markerZ
-        ) * rot
+        root.CFrame =
+            CFrame.new(markerX, rootY, markerZ) * rot
 
         root.AssemblyLinearVelocity = Vector3.zero
         root.AssemblyAngularVelocity = Vector3.zero
@@ -641,7 +1264,7 @@ InfoTab:Code({
 end)
 
 --==================================================
--- إعادة ضبط الطفو عند ظهور الشخصية
+-- FLOAT CHARACTER
 --==================================================
 
 local function onFloatCharacterAdded(char)
@@ -659,24 +1282,112 @@ local function onFloatCharacterAdded(char)
 
     removeMarker()
     setFloatCamera(false)
-    setFloatButton(false)
-    setTeleportButton(false)
-    refreshFloatStatus()
 end
---__________________________________________________________________
---__________________________________________________________________
--- ================== Copy Tools ==================
+
+LocalPlayer.CharacterAdded:Connect(onFloatCharacterAdded)
+
+if LocalPlayer.Character then
+    task.spawn(
+        onFloatCharacterAdded,
+        LocalPlayer.Character
+    )
+end
+
+--==================================================
+-- FLOAT UI
+--==================================================
+
+FloatTab:AddSection({
+    "نظام الاختفاء والطفو"
+})
+
+FloatTab:AddToggle({
+    Name = "اختفاء",
+    Default = false,
+
+    Callback = function(value)
+        if value then
+            startFloat()
+        else
+            stopFloat()
+        end
+    end
+})
+
+FloatTab:AddTextBox({
+    Name = "مسافة عمق الاختفاء",
+    Description = "المسافة بين اللاعب والمربع",
+    PlaceholderText = "30",
+
+    Callback = function(value)
+        local number = tonumber(value)
+
+        if number then
+            distance = math.clamp(
+                math.floor(math.abs(number)),
+                1,
+                MAX_DISTANCE
+            )
+        end
+    end
+})
+
+FloatTab:AddTextBox({
+    Name = "سرعة مشي المربع",
+    Description = "سرعة حركة المربع",
+    PlaceholderText = "16",
+
+    Callback = function(value)
+        local number = tonumber(value)
+
+        if number then
+            speed = math.clamp(
+                math.floor(math.abs(number)),
+                1,
+                MAX_SPEED
+            )
+        end
+    end
+})
+
+FloatTab:AddToggle({
+    Name = "أداة الانتقال للمربع",
+    Description = "فعّلها ثم اضغط على المكان المطلوب",
+    Default = false,
+
+    Callback = function(value)
+        teleportOn = value
+    end
+})
+
+--==================================================
+-- COPY TOOLS TAB
+--==================================================
+
+local CopyTab = Window:MakeTab({
+    "نسخ الأدوات",
+    "copy"
+})
+
 local selectedName = nil
 
 local function copyToolsFrom(targetPlayer)
     local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
-    if not backpack or not targetPlayer then return 0 end
+
+    if not backpack or not targetPlayer then
+        return 0
+    end
 
     local count = 0
     local sources = {}
-    if targetPlayer:FindFirstChildOfClass("Backpack") then
-        table.insert(sources, targetPlayer:FindFirstChildOfClass("Backpack"))
+
+    local targetBackpack =
+        targetPlayer:FindFirstChildOfClass("Backpack")
+
+    if targetBackpack then
+        table.insert(sources, targetBackpack)
     end
+
     if targetPlayer.Character then
         table.insert(sources, targetPlayer.Character)
     end
@@ -684,117 +1395,115 @@ local function copyToolsFrom(targetPlayer)
     for _, source in ipairs(sources) do
         for _, item in ipairs(source:GetChildren()) do
             if item:IsA("Tool") then
-                item:Clone().Parent = backpack
-                count += 1
+                local clone = item:Clone()
+                clone.Parent = LocalPlayer.Backpack
+                copiedCount = copiedCount + 1
             end
         end
     end
-    return count
+
+    return copiedCount
 end
 
-local function getPlayerNames()
-    local names = {}
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer then
-            table.insert(names, p.Name)
-        end
-    end
-    return names
-end
-
-local CopyTab = Window:Tab({
-    Title = "قائمة نسخ ادوات",
-    Icon = "copy",
-    Locked = false,
-})
-
-CopyTab:Button({
-    Title = "Copy All Tools",
-    Desc = "نسخ أدوات جميع اللاعبين إلى حقيبتك",
+CopyTab:AddButton({
+    Name = "نسخ الأدوات",
+    Description = "نسخ الأدوات المتاحة من اللاعب المحدد",
     Callback = function()
-        local total = 0
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer then
-                total += copyToolsFrom(p)
-            end
-        end
-        WindUI:Notify({
-            Title = "نسخ ادوات جميع لاعبين",
-            Content = "تم نسخ " .. total .. " أداة",
-            Duration = 3,
-        })
-    end,
-})
+        local target = getSelected()
 
-local PlayerDropdown = CopyTab:Dropdown({
-    Title = "Select Player",
-    Desc = "اختر لاعب لنسخ أدواته",
-    Values = getPlayerNames(),
-    Value = nil,
-    Callback = function(value)
-        selectedName = value
-    end,
-})
-
-CopyTab:Button({
-    Title = "تحديث قائمة لاعبين",
-    Desc = "حته يضهر لاعبين جديدين",
-    Callback = function()
-        PlayerDropdown:Refresh(getPlayerNames())
-    end,
-})
-
-CopyTab:Button({
-    Title = "نسخ ادوات لاعب",
-    Desc = "نسخ أدوات اللاعب المختار فقط",
-    Callback = function()
-        if not selectedName then
-            WindUI:Notify({ Title = "خطأ", Content = "اختر لاعب أولاً", Duration = 3 })
-            return
-        end
-        local target = Players:FindFirstChild(selectedName)
         if not target then
-            WindUI:Notify({ Title = "خطأ", Content = "اللاعب غير موجود", Duration = 3 })
+            warn("اختر لاعباً أولاً")
             return
         end
-        local count = copyToolsFrom(target)
-        WindUI:Notify({
-            Title = "نسخ ادوات لاعب",
-            Content = "تم نسخ " .. count .. " أداة من " .. selectedName,
-            Duration = 3,
-        })
-    end,
+
+        local copiedCount = copyTools(target)
+        print("عدد الأدوات: " .. copiedCount)
+    end
 })
 
---__________________________________________________________________
---__________________________________________________________________
---__________________________________________________________________
+-- تحديث قائمة اللاعبين
+Players.PlayerAdded:Connect(function()
+    task.wait(1)
+    refreshPlayerDropdown()
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if State.SelectedPlayer == player.Name then
+        State.SelectedPlayer = nil
+    end
+
+    task.wait(0.2)
+    refreshPlayerDropdown()
+end)
+
+--==================================================
+-- END PART 2
+--==================================================
 
 
-local ProtectTab = Window:Tab({
-    Title = "قائمة مضادات",
-    Icon = "shield",
-    Locked = false,
+--==================================================
+-- ALI SCRIPT - REDZ LIBRARY
+-- PART 3 / 3
+-- PROTECTION SYSTEMS
+--==================================================
+--==================================================
+-- ALI SCRIPT - REDZ LIBRARY
+-- PART 3 / 3
+-- PROTECTION SYSTEMS
+--==================================================
+--==================================================
+-- ALI SCRIPT - REDZ LIBRARY
+-- PART 3 / 3
+-- PROTECTION SYSTEMS
+--==================================================
+--==================================================
+-- ALI SCRIPT - REDZ LIBRARY
+-- PART 3 / 3
+-- PROTECTION SYSTEMS
+--==================================================
+--==================================================
+-- ALI SCRIPT - REDZ LIBRARY
+-- PART 3 / 3
+-- PROTECTION SYSTEMS
+--==================================================
+
+local ProtectTab = Window:MakeTab({
+    "قائمة مضادات",
+    "shield"
 })
 
--- ================== نظام عدم الموت ==================
+ProtectTab:AddSection({
+    "أنظمة الحماية"
+})
+
+--==================================================
+-- ANTI DEATH
+--==================================================
+
 local WantEnabled = false
 local Active = false
-local Character, Humanoid, Shield, OriginalMaxHealth
+
+local Character
+local Humanoid
+local Shield
+local OriginalMaxHealth
+
 local Connections = {}
 local Original = {}
 
 local function Cleanup()
-    for _, c in ipairs(Connections) do
-        c:Disconnect()
+    for _, connection in ipairs(Connections) do
+        connection:Disconnect()
     end
+
     table.clear(Connections)
 
     for part, value in pairs(Original) do
-        if part.Parent then
+        if part and part.Parent then
             part.CanTouch = value
         end
     end
+
     table.clear(Original)
 
     if Shield then
@@ -805,6 +1514,7 @@ local function Cleanup()
     if Humanoid and Humanoid.Parent and OriginalMaxHealth then
         Humanoid.MaxHealth = OriginalMaxHealth
     end
+
     OriginalMaxHealth = nil
     Active = false
 end
@@ -818,7 +1528,12 @@ end
 
 local function StartProtection()
     Cleanup()
-    if not Character or not Humanoid or Humanoid.Health <= 0 then
+
+    if not Character or not Humanoid then
+        return
+    end
+
+    if Humanoid.Health <= 0 then
         return
     end
 
@@ -831,21 +1546,30 @@ local function StartProtection()
     for _, desc in ipairs(Character:GetDescendants()) do
         ApplyTouch(desc)
     end
-    table.insert(Connections, Character.DescendantAdded:Connect(ApplyTouch))
+
+    table.insert(
+        Connections,
+        Character.DescendantAdded:Connect(ApplyTouch)
+    )
 
     OriginalMaxHealth = Humanoid.MaxHealth
+
     Humanoid.MaxHealth = 1000000000
     Humanoid.Health = Humanoid.MaxHealth
 
-    table.insert(Connections, Humanoid.HealthChanged:Connect(function(hp)
-        if Active and hp < Humanoid.MaxHealth then
-            Humanoid.Health = Humanoid.MaxHealth
-        end
-    end))
+    table.insert(
+        Connections,
+        Humanoid.HealthChanged:Connect(function(hp)
+            if Active and hp < Humanoid.MaxHealth then
+                Humanoid.Health = Humanoid.MaxHealth
+            end
+        end)
+    )
 end
 
 local function OnCharacter(char)
     Cleanup()
+
     Character = char
     Humanoid = char:WaitForChild("Humanoid")
 
@@ -855,17 +1579,22 @@ local function OnCharacter(char)
 end
 
 LocalPlayer.CharacterAdded:Connect(OnCharacter)
+
 if LocalPlayer.Character then
-    task.spawn(OnCharacter, LocalPlayer.Character)
+    task.spawn(
+        OnCharacter,
+        LocalPlayer.Character
+    )
 end
 
--- ================== الزر ==================
-ProtectTab:Toggle({
-    Title = "مضاد الموت",
-    Desc = "ما يشتغل عند لاعبين",
+ProtectTab:AddToggle({
+    Name = "مضاد الموت",
+    Description = "حماية محلية للشخصية",
     Default = false,
+
     Callback = function(state)
         WantEnabled = state
+
         if state then
             StartProtection()
         else
@@ -874,11 +1603,15 @@ ProtectTab:Toggle({
     end
 })
 
+--==================================================
+-- ANTI VOID
+--==================================================
 
--- ================== مضاد الفويد ==================
 local VoidEnabled = false
-local VoidDistance = 550     -- قوة/ارتفاع الصعود (ثابت)
-local TriggerDepth = 400     -- كم ستد تنزل تحت آخر أرضية قبل التفعيل (ثابت)
+
+local VoidDistance = 550
+local TriggerDepth = 400
+
 local VoidConn
 local LastGroundY = nil
 local LastBoost = 0
@@ -888,52 +1621,88 @@ local function StopVoid()
         VoidConn:Disconnect()
         VoidConn = nil
     end
+
     LastGroundY = nil
 end
 
 local function StartVoid()
     StopVoid()
-    VoidConn = RunService.Heartbeat:Connect(function()
-        local char = LocalPlayer.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if not root or not hum or hum.Health <= 0 then return end
 
-        -- تسجيل آخر ارتفاع وقفت عليه فعلاً
+    VoidConn = RunService.Heartbeat:Connect(function()
+
+        local char = LocalPlayer.Character
+
+        local root = char
+            and char:FindFirstChild("HumanoidRootPart")
+
+        local hum = char
+            and char:FindFirstChildOfClass("Humanoid")
+
+        if not root or not hum or hum.Health <= 0 then
+            return
+        end
+
         if hum.FloorMaterial ~= Enum.Material.Air then
             LastGroundY = root.Position.Y
             return
         end
 
-        if not LastGroundY then return end
+        if not LastGroundY then
+            return
+        end
 
-        local vel = root.AssemblyLinearVelocity
+        local velocity = root.AssemblyLinearVelocity
 
-        -- يتفعّل فقط إذا نزلت تحت آخر أرضية بـ TriggerDepth وأنت تسقط
-        if root.Position.Y > LastGroundY - TriggerDepth or vel.Y >= 0 then return end
+        if root.Position.Y > LastGroundY - TriggerDepth
+            or velocity.Y >= 0 then
+            return
+        end
 
-        -- إذا فيه أرض قريبة تحتك لا يتدخل
         local params = RaycastParams.new()
-        params.FilterType = Enum.RaycastFilterType.Exclude
-        params.FilterDescendantsInstances = { char }
-        local hit = Workspace:Raycast(root.Position, Vector3.new(0, -math.max(300, TriggerDepth), 0), params)
-        if hit then return end
 
-        -- مانع تكرار سريع
-        if os.clock() - LastBoost < 0.5 then return end
+        params.FilterType =
+            Enum.RaycastFilterType.Exclude
+
+        params.FilterDescendantsInstances = {
+            char
+        }
+
+        local hit = Workspace:Raycast(
+            root.Position,
+            Vector3.new(0, -math.max(300, TriggerDepth), 0),
+            params
+        )
+
+        if hit then
+            return
+        end
+
+        if os.clock() - LastBoost < 0.5 then
+            return
+        end
+
         LastBoost = os.clock()
 
-        local v = math.sqrt(2 * Workspace.Gravity * VoidDistance)
-        root.AssemblyLinearVelocity = Vector3.new(vel.X, v, vel.Z)
+        local velocityUp = math.sqrt(
+            2 * Workspace.Gravity * VoidDistance
+        )
+
+        root.AssemblyLinearVelocity = Vector3.new(
+            velocity.X,
+            velocityUp,
+            velocity.Z
+        )
     end)
 end
 
-ProtectTab:Toggle({
-    Title = "مضاد الفويد",
-    Desc = "يمنع موت في فويد",
+ProtectTab:AddToggle({
+    Name = "مضاد الفويد",
+    Description = "محاولة منع السقوط خارج الخريطة",
     Default = false,
+
     Callback = function(state)
         VoidEnabled = state
+
         if state then
             StartVoid()
         else
@@ -941,18 +1710,30 @@ ProtectTab:Toggle({
         end
     end
 })
-local NoclipOthersGen = 0          -- يمنع تشغيل أكثر من حلقة في نفس الوقت
-local OthersOriginalCollide = {}   -- [BasePart] = CanCollide الأصلي
+
+--==================================================
+-- ANTI FLING
+--==================================================
+
+local NoclipOthersEnabled = false
+
+local NoclipOthersGen = 0
+local OthersOriginalCollide = {}
 
 local function ApplyNoclipToOthers()
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer and plr.Character then
-            for _, d in ipairs(plr.Character:GetDescendants()) do
-                if d:IsA("BasePart") then
-                    if OthersOriginalCollide[d] == nil then
-                        OthersOriginalCollide[d] = d.CanCollide
+    for _, player in ipairs(Players:GetPlayers()) do
+
+        if player ~= LocalPlayer and player.Character then
+
+            for _, part in ipairs(player.Character:GetDescendants()) do
+
+                if part:IsA("BasePart") then
+
+                    if OthersOriginalCollide[part] == nil then
+                        OthersOriginalCollide[part] = part.CanCollide
                     end
-                    d.CanCollide = false
+
+                    part.CanCollide = false
                 end
             end
         end
@@ -961,33 +1742,45 @@ end
 
 local function RestoreOthers()
     for part, original in pairs(OthersOriginalCollide) do
-        if part.Parent then
+
+        if part and part.Parent then
             part.CanCollide = original
         end
     end
+
     table.clear(OthersOriginalCollide)
 end
 
 local function StartNoclipOthers()
     NoclipOthersGen += 1
+
     local gen = NoclipOthersGen
+
     task.spawn(function()
-        while NoclipOthersEnabled and gen == NoclipOthersGen do
+
+        while NoclipOthersEnabled
+            and gen == NoclipOthersGen do
+
             ApplyNoclipToOthers()
+
             task.wait(0.3)
         end
+
         if gen == NoclipOthersGen then
             RestoreOthers()
         end
     end)
 end
 
-ProtectTab:Toggle({
-    Title = "مضاد فنق",
-    Desc = "ما يقدر يطيروك في جو",
+ProtectTab:AddToggle({
+    Name = "مضاد فنق",
+    Description = "تقليل التصادم مع الشخصيات الأخرى",
     Default = false,
+
     Callback = function(state)
+
         NoclipOthersEnabled = state
+
         if state then
             StartNoclipOthers()
         else
@@ -997,29 +1790,53 @@ ProtectTab:Toggle({
     end
 })
 
--- ================== مضاد الجلوس ==================
+--==================================================
+-- ANTI SIT
+--==================================================
+
 local AntiSitEnabled = false
 local AntiSitConn
 
 local function StopAntiSit()
+
     if AntiSitConn then
         AntiSitConn:Disconnect()
         AntiSitConn = nil
     end
+
     local char = LocalPlayer.Character
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+    local hum = char
+        and char:FindFirstChildOfClass("Humanoid")
+
     if hum then
-        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        hum:SetStateEnabled(
+            Enum.HumanoidStateType.Seated,
+            true
+        )
     end
 end
 
 local function StartAntiSit()
+
     StopAntiSit()
+
     AntiSitConn = RunService.Heartbeat:Connect(function()
+
         local char = LocalPlayer.Character
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if not hum then return end
-        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+        local hum = char
+            and char:FindFirstChildOfClass("Humanoid")
+
+        if not hum then
+            return
+        end
+
+        hum:SetStateEnabled(
+            Enum.HumanoidStateType.Seated,
+            false
+        )
+
         if hum.Sit then
             hum.Sit = false
             hum.Jump = true
@@ -1027,12 +1844,15 @@ local function StartAntiSit()
     end)
 end
 
-ProtectTab:Toggle({
-    Title = "مضاد الجلوس",
-    Desc = "يمنع فنق جلوس",
+ProtectTab:AddToggle({
+    Name = "مضاد الجلوس",
+    Description = "منع الجلوس تلقائياً",
     Default = false,
+
     Callback = function(state)
+
         AntiSitEnabled = state
+
         if state then
             StartAntiSit()
         else
@@ -1040,3 +1860,93 @@ ProtectTab:Toggle({
         end
     end
 })
+
+--==================================================
+-- CHARACTER RESPAWN SUPPORT
+--==================================================
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+
+    task.wait(1)
+
+    if AntiSitEnabled then
+        StartAntiSit()
+    end
+
+    if NoclipOthersEnabled then
+        StartNoclipOthers()
+    end
+
+    if VoidEnabled then
+        StartVoid()
+    end
+end)
+
+--==================================================
+-- PERFORMANCE SETTINGS
+--==================================================
+
+local PerformanceTab = Window:MakeTab({
+    "الأداء",
+    "activity"
+})
+
+PerformanceTab:AddSection({
+    "تحسين الأداء"
+})
+
+local PerformanceEnabled = false
+
+local OriginalEffects = {}
+
+local function SetPerformance(state)
+
+    PerformanceEnabled = state
+
+    if state then
+
+        table.clear(OriginalEffects)
+
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+
+            if obj:IsA("ParticleEmitter")
+                or obj:IsA("Trail")
+                or obj:IsA("Smoke")
+                or obj:IsA("Fire")
+                or obj:IsA("Sparkles") then
+
+                OriginalEffects[obj] = obj.Enabled
+                obj.Enabled = false
+            end
+        end
+
+    else
+
+        for obj, original in pairs(OriginalEffects) do
+
+            if obj and obj.Parent then
+                obj.Enabled = original
+            end
+        end
+
+        table.clear(OriginalEffects)
+    end
+end
+
+PerformanceTab:AddToggle({
+    Name = "تقليل المؤثرات",
+    Description = "تعطيل بعض المؤثرات محلياً لتحسين الأداء",
+    Default = false,
+
+    Callback = function(state)
+        SetPerformance(state)
+    end
+})
+
+--==================================================
+-- END OF ALI SCRIPT
+--==================================================
+
+print("ALI SCRIPT - REDZ LIBRARY LOADED")
+print("Developer: hdjjlawe")
+print("All 3 parts completed")
