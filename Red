@@ -1,94 +1,208 @@
-local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"))()
+--==================================================
+-- REDZ LIBRARY - FULL UI TEMPLATE
+--==================================================
+
+local redzlib = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"
+))()
+
+--==================================================
+-- WINDOW
+--==================================================
 
 local Window = redzlib:MakeWindow({
-  Title = "redz Hub : Blox Fruits",
-  SubTitle = "by redz9999",
-  SaveFolder = "testando | redz lib v5.lua"
+    Title = "Alawi Hub",
+    SubTitle = "by .مطور علاوي",
+    SaveFolder = "AlawiHub"
 })
+
+--==================================================
+-- MINIMIZE BUTTON
+--==================================================
+
 Window:AddMinimizeButton({
-    Button = { Image = "rbxassetid://71014873973869", BackgroundTransparency = 0 },
-    Corner = { CornerRadius = UDim.new(35, 1) },
-})
-
-local Tab1 = Window:MakeTab({"Um", "cherry"})
-
-Tab1:AddDiscordInvite({
-    Name = "Name Hub",
-    Description = "Join server",
-    Logo = "rbxassetid://18751483361",
-    Invite = "Link discord invite",
-})
-
-Window:SelectTab(Tab1)
-
-local Section = Tab1:AddSection({"Section"})
-
-local Paragraph = Tab1:AddParagraph({"Paragraph", "This is a Paragraph\nSecond Line"})
-
-  local Dialog = Window:Dialog({
-    Title = "Dialog",
-    Text = "This is a Dialog",
-    Options = {
-      {"Confirm", function()
-        
-      end},
-      {"Maybe", function()
-        
-      end},
-      {"Cancel", function()
-        
-      end}
+    Button = {
+        Image = "rbxassetid://11028318025",
+        BackgroundTransparency = 0
+    },
+    Corner = {
+        CornerRadius = UDim.new(35, 1)
     }
-  })
-  
-  Tab1:AddButton({"Print", function(Value)
-print("Hello World!")
-end})
-
-local Toggle1 = Tab1:AddToggle({
-  Name = "Toggle",
-  Description = "This is a <font color='rgb(88, 101, 242)'>Toggle</font> Example",
-  Default = false 
 })
-Toggle1:Callback(function(Value)
- 
-end)
 
-Tab1:AddToggle({
-    Name = "Toggle",
-    Default = false,
-    Callback = function(v)
+--==================================================
+-- TAB 1
+--==================================================
 
+local MainTab = Window:MakeTab({"الرئيسية", "home"})
+
+MainTab:AddSection({"معلومات"})
+
+MainTab:AddParagraph({
+    "Alawi Hub",
+    "مرحباً بك في القائمة"
+})
+
+MainTab:AddButton({
+    Name = "زر تجريبي",
+    Callback = function()
+        print("Button Clicked")
     end
 })
 
-Tab1:AddSlider({
-  Name = "Speed",
-  Min = 1,
-  Max = 100,
-  Increase = 1,
-  Default = 16,
-  Callback = function(Value)
-  
-  end
+MainTab:AddToggle({
+    Name = "Toggle تجريبي",
+    Description = "تشغيل وإيقاف",
+    Default = false,
+    Callback = function(value)
+        print(value)
+    end
 })
 
-local Dropdown = Tab1:AddDropdown({
-  Name = "Players List",
-  Description = "Select the <font color='rgb(88, 101, 242)'>Number</font>",
-  Options = {"one", "two", "three"},
-  Default = "two",
-  Flag = "dropdown teste",
-  Callback = function(Value)
-    
-  end
+MainTab:AddSlider({
+    Name = "Slider تجريبي",
+    Min = 1,
+    Max = 100,
+    Increase = 1,
+    Default = 16,
+    Callback = function(value)
+        print(value)
+    end
 })
 
-Tab1:AddTextBox({
-  Name = "Name item",
-  Description = "1 Item on 1 Server", 
-  PlaceholderText = "item only",
-  Callback = function(Value)
-    
-  end
+MainTab:AddTextBox({
+    Name = "خانة كتابة",
+    Description = "اكتب النص هنا",
+    PlaceholderText = "اكتب...",
+    Callback = function(value)
+        print(value)
+    end
 })
+
+MainTab:AddDropdown({
+    Name = "قائمة اختيار",
+    Description = "اختر عنصراً",
+    Options = {"الأول", "الثاني", "الثالث"},
+    Default = "الأول",
+    Callback = function(value)
+        print(value)
+    end
+})
+
+MainTab:AddParagraph({
+    "ملاحظة",
+    "هذا مكان عرض المعلومات"
+})
+
+--==================================================
+-- TAB 2
+--==================================================
+
+local PlayerTab = Window:MakeTab({"اللاعب", "user"})
+
+PlayerTab:AddSection({"إعدادات اللاعب"})
+
+PlayerTab:AddButton({
+    Name = "زر اللاعب",
+    Callback = function()
+        print("Player Button")
+    end
+})
+
+PlayerTab:AddToggle({
+    Name = "تفعيل",
+    Default = false,
+    Callback = function(value)
+        print(value)
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "السرعة",
+    Min = 1,
+    Max = 250,
+    Increase = 1,
+    Default = 16,
+    Callback = function(value)
+        print(value)
+    end
+})
+
+--==================================================
+-- TAB 3
+--==================================================
+
+local AutoTab = Window:MakeTab({"أوتو", "zap"})
+
+AutoTab:AddSection({"أنظمة تلقائية"})
+
+AutoTab:AddToggle({
+    Name = "Auto 1",
+    Default = false,
+    Callback = function(value)
+        print(value)
+    end
+})
+
+AutoTab:AddToggle({
+    Name = "Auto 2",
+    Default = false,
+    Callback = function(value)
+        print(value)
+    end
+})
+
+AutoTab:AddButton({
+    Name = "تشغيل",
+    Callback = function()
+        print("Started")
+    end
+})
+
+--==================================================
+-- TAB 4
+--==================================================
+
+local ImageTab = Window:MakeTab({"الصور", "image"})
+
+ImageTab:AddSection({"معرض الصور"})
+
+-- مكان صورة
+ImageTab:AddLabel({
+    "Image",
+    "صورة تجريبية",
+    "rbxassetid://123456789"
+})
+
+--==================================================
+-- TAB 5
+--==================================================
+
+local SettingsTab = Window:MakeTab({"الإعدادات", "settings"})
+
+SettingsTab:AddSection({"إعدادات القائمة"})
+
+SettingsTab:AddButton({
+    Name = "إظهار رسالة",
+    Callback = function()
+        Window:Dialog({
+            Title = "Alawi Hub",
+            Text = "أهلاً بك",
+            Options = {
+                {
+                    Title = "إغلاق",
+                    Callback = function()
+                    end
+                }
+            }
+        })
+    end
+})
+
+--==================================================
+-- SELECT FIRST TAB
+--==================================================
+
+Window:SelectTab(MainTab)
+
+print("Alawi Hub UI Loaded")
